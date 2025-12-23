@@ -1,16 +1,16 @@
--- Load some default values
+local Planet = require("planet")
+
+local planet1 = Planet:new(1,1,1, 5500, 12)
+
 function love.load()
-    x, y, w, h = 20, 20, 60, 20
+    planet1:printInfo()
 end
 
 -- Runs every frame
 function love.update(dt)
-    w = w + 1
-    h = h + 1
 end
 
 -- Draws everything
 function love.draw()
-    love.graphics.setColor(0, 0.5, 0.4)
-    love.graphics.rectangle("fill", x, y, w, h)
+    planet1:render()
 end

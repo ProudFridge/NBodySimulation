@@ -3,4 +3,5 @@ function love.conf(t)
     t.window.height = 768
 
     t.window.title = "Untitled"
+    t.console = true
 end

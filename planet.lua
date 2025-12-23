@@ -1,0 +1,35 @@
+local Planet = {}
+Planet.__index = Planet
+
+function Planet.new(r,g,b, radius, mass, density)
+    local newPlanet = {}
+    setmetatable(newPlanet, Planet)
+
+    --Creating the fields for the new object
+    -- newPlanet.color = color Will fix later
+    newPlanet.r = r
+    newPlanet.g = g
+    newPlanet.b = b
+    newPlanet.radius = radius --or method that calculates it
+    newPlanet.mass = mass
+    newPlanet.density = density or 5.513 --grams per cubic centimeter
+
+    --To change later
+    newPlanet.pos_x = love.graphics.getWidth() / 2
+    newPlanet.pos_y = love.graphics.getHeight() / 2
+
+    return newPlanet
+end
+
+function Planet:render()
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.ellipse("fill", self.pos_x, self.pos_y, self.radius, self.radius, 10)
+end
+
+function Planet:printInfo()
+    print("Color: ", self.r, self.g, self.b, "\nRadius: ", self.radius, "\nMass: ", self.mass, "\nDensity: ", self.density, "\nPositionX: ", self.pos_x, "\nPositionY: ", self.pos_y)
+end
+
+
+
+return Planet
