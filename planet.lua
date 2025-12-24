@@ -7,9 +7,9 @@ function Planet:new(r, g, b, radius, mass, density, pos_x, pos_y, velocity_x, ve
 
     --Creating the fields for the new object
     -- newPlanet.color = color Will fix later
-    newPlanet.r = r
-    newPlanet.g = g
-    newPlanet.b = b
+    newPlanet.r = math.random()
+    newPlanet.g = math.random()
+    newPlanet.b = math.random()
     newPlanet.radius = radius --or method that calculates it
     newPlanet.mass = mass --in kg
     newPlanet.density = density or 5.513 --grams per cubic centimeter
@@ -20,7 +20,7 @@ function Planet:new(r, g, b, radius, mass, density, pos_x, pos_y, velocity_x, ve
 
     newPlanet.velocity_x = velocity_x or 0
     newPlanet.velocity_y = velocity_y or 0
-    
+
     return newPlanet
 end
 

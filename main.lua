@@ -3,7 +3,8 @@ local Timer = require("timer")
 local Utils = require("utils")
 
 local planetList = {}
-local timer = Timer.new(0.5)
+local timer = Timer.new(0.1)
+
 
 function love.load()
 end
@@ -15,7 +16,7 @@ function love.update(dt)
     end
 
     timer:tick(dt)
-
+    local checks = 0
     --Insert new planet
     if love.keyboard.isDown("w") and timer.isDone == true then
         table.insert(planetList, Planet:new(1,1,1, 100, 1200, nil, love.mouse.getX(), love.mouse.getY()))
@@ -29,11 +30,12 @@ function love.update(dt)
         for j = i + 1, #planetList do
             local planet1 = planetList[i]
             local planet2 = planetList[j]
-
+            checks = checks + 1
             local force = computeGravity(planet1, planet2, 6.74)
             applyGravity(planet1, planet2, dt, force)
         end
     end
+    print(checks)
 
 end
 
@@ -89,7 +91,7 @@ function renderLines(planetList)
         for j = i + 1, #planetList do
             local planet1 = planetList[i]
             local planet2 = planetList[j]
-
+            love.graphics.setColor(planet2.r, planet2.g, planet2.b)
             love.graphics.line(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)
         end
     end
