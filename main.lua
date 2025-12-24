@@ -3,7 +3,7 @@ local Timer = require("timer")
 local Utils = require("utils")
 
 local planetList = {}
-local timer = Timer.new(0.5)
+local timer = Timer.new(0.001)
 
 
 function love.load()
@@ -67,6 +67,8 @@ function computeGravity(planet1, planet2, gravitational_constant)
         return 0
     end
 end
+
+--Fix some error: only one planet since we seperated the two
 
 --Moves two objects according to the gravitational force that's acting on them
 function computeGravity2(planet1, planet2, dt, force)
