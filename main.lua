@@ -44,7 +44,7 @@ function love.draw()
         -- planet:printInfo()
     end
 
-    renderLines()
+    renderLines(planetList)
 
 end
 
@@ -84,7 +84,7 @@ function applyGravity(planet1, planet2, dt, force)
     planet2.pos_y = planet2.pos_y + planet2.velocity_y * dt
 end
 
-function renderLines()
+function renderLines(planetList)
     for i = 1, #planetList do
         for j = i + 1, #planetList do
             local planet1 = planetList[i]
