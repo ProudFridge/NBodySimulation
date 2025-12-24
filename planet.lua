@@ -1,7 +1,7 @@
 local Planet = {}
 Planet.__index = Planet
 
-function Planet:new(r, g, b, radius, mass, density, pos_x, pos_y, velocity_x, velocity_y)
+function Planet:new(r, g, b, radius, mass, density, pos_x, pos_y, velocity_x, velocity_y, acceleration_x, acceleration_y)
     local newPlanet = {}
     setmetatable(newPlanet, Planet)
 
@@ -20,6 +20,10 @@ function Planet:new(r, g, b, radius, mass, density, pos_x, pos_y, velocity_x, ve
 
     newPlanet.velocity_x = velocity_x or 0
     newPlanet.velocity_y = velocity_y or 0
+
+    newPlanet.acceleration_x = acceleration_x or 0
+    newPlanet.acceleration_y = acceleration_y or 0
+
 
     return newPlanet
 end

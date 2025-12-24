@@ -3,7 +3,7 @@ local Timer = require("timer")
 local Utils = require("utils")
 
 local planetList = {}
-local timer = Timer.new(0.1)
+local timer = Timer.new(0.5)
 
 
 function love.load()
@@ -26,14 +26,24 @@ function love.update(dt)
 
     print(#planetList)
 
+    for i, planet in ipairs(planetList) do
+        planet.acceleration_x = 0
+        planet.acceleration_y = 0
+    end
+
+
     for i = 1, #planetList do
         for j = i + 1, #planetList do
             local planet1 = planetList[i]
             local planet2 = planetList[j]
             checks = checks + 1
             local force = computeGravity(planet1, planet2, 6.74)
-            applyGravity(planet1, planet2, dt, force)
+            computeGravity2(planet1, planet2, dt, force)
         end
+    end
+
+    for i, planet in ipairs(planetList) do
+        applyGravity(planet, dt)
     end
     print(checks)
 
@@ -59,31 +69,30 @@ function computeGravity(planet1, planet2, gravitational_constant)
 end
 
 --Moves two objects according to the gravitational force that's acting on them
-function applyGravity(planet1, planet2, dt, force)
+function computeGravity2(planet1, planet2, dt, force)
     --Find the direction between planet1 and planet2 then find the unit vector to find the total force
     local x_component, y_component = Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)
     local x_force, y_force = Utils.calcUnitVector(x_component, y_component)
 
     --Finding the acceleration
-    local acceleration_x1 = x_force * force / planet1.mass
-    local acceleration_y1 = y_force * force / planet1.mass
+    planet1.acceleration_x = planet1.acceleration_x + y_force * force / planet1.mass
+    planet1.acceleration_y = planet1.acceleration_y + y_force * force / planet1.mass
 
-    local acceleration_x2 = x_force * force / planet2.mass
-    local acceleration_y2 = y_force * force / planet2.mass
+    planet2.acceleration_x = planet2.acceleration_x + x_force * force / planet2.mass
+    planet2.acceleration_y = planet2.acceleration_y + y_force * force / planet2.mass
 
     --Finding the velocity
-    planet1.velocity_x = planet1.velocity_x + acceleration_x1 * dt
-    planet1.velocity_y = planet1.velocity_y + acceleration_y1 * dt
+    planet1.velocity_x = planet1.velocity_x + planet1.acceleration_x * dt
+    planet1.velocity_y = planet1.velocity_y + planet1.acceleration_y * dt
 
-    planet2.velocity_x = planet2.velocity_x - acceleration_x2 * dt
-    planet2.velocity_y = planet2.velocity_y - acceleration_y2 * dt
+    planet2.velocity_x = planet2.velocity_x - planet2.acceleration_x * dt
+    planet2.velocity_y = planet2.velocity_y - planet2.acceleration_y * dt
+end
 
+function applyGravity(planet, dt)
     --Finding the new positions
-    planet1.pos_x = planet1.pos_x + planet1.velocity_x * dt
-    planet1.pos_y = planet1.pos_y + planet1.velocity_y * dt
-
-    planet2.pos_x = planet2.pos_x + planet2.velocity_x * dt
-    planet2.pos_y = planet2.pos_y + planet2.velocity_y * dt
+    planet.pos_x = planet.pos_x + planet.velocity_x * dt
+    planet.pos_y = planet.pos_y + planet.velocity_y * dt
 end
 
 function renderLines(planetList)
