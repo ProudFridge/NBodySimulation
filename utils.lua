@@ -14,4 +14,16 @@ function Utils.calcUnitVector(x_component, y_component)
     return x_component / magnitude, y_component / magnitude
 end
 
+function Utils.clamp(minValue, maxValue, actualValue)
+    local clampedValue = actualValue
+
+    if actualValue > maxValue then
+        clampedValue = maxValue
+    elseif actualValue < minValue then
+        clampedValue = minValue
+    end
+
+    return clampedValue
+end
+
 return Utils

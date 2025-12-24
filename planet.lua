@@ -30,6 +30,7 @@ end
 
 function Planet:render()
     love.graphics.setColor(self.r, self.g, self.b)
+    love.graphics.setColor(1, 1, 1)
     -- love.graphics.ellipse("fill", self.pos_x, self.pos_y, self.radius, self.radius, 100)
     love.graphics.ellipse("fill", self.pos_x, self.pos_y, 10, 10, 100)
 end
