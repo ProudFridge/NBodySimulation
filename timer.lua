@@ -13,7 +13,8 @@ function Timer.new(totalTime)
 end
 
 function Timer:tick(dt)
-    --Lowers the timers remaining tiem each frame and stores a buffer for the next restart
+    --Lowers the timers remaining time each frame and stores a buffer for the next restart
+    --Might have to fix this later if the buffer doens't persist after restarts
     local buffer = 0
     if self.timeLeft + buffer - dt > 0 then
         self.timeLeft = self.timeLeft + buffer - dt
