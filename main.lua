@@ -4,13 +4,14 @@ local Utils = require("utils")
 local Gravity = require("gravity")
 
 local planetList = {}
-local timer = Timer.new(0.01)
+local timer = Timer.new(0.5)
 
 local debug = false
 local simulation = true
 local clear = false
 
--- Runs every frame
+-- local constant = 6.6743e-11
+local constant = 4
 function love.update(dt)
     if love.keyboard.isDown("escape") then
         love.event.quit()
@@ -19,10 +20,12 @@ function love.update(dt)
 
     timer:tick(dt)
     local checks = 0
-
+    local color = {1,1,0.2}
     --Insert new planet
     if love.keyboard.isDown("w") and timer.isDone == true then
-        table.insert(planetList, Planet:new(1,1,1, nil, 120000, nil, love.mouse.getX(), love.mouse.getY()))
+        -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , nil, love.mouse.getX(), love.mouse.getY()))
+        table.insert(planetList, Planet:new(color, nil, 120000, nil, love.mouse.getX(), love.mouse.getY()))
+        
         timer:reset()
         planetList[#planetList]:printInfo()
     end
@@ -48,7 +51,7 @@ function love.update(dt)
                 local planet1 = planetList[i]
                 local planet2 = planetList[j]
                 checks = checks + 1
-                local force = Gravity.computeGravitationalForce(planet1, planet2, 6.74)
+                local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
                 Gravity.computeVelocity(planet1, planet2, dt, force)
             end
         end
@@ -67,10 +70,8 @@ end
 
 -- Draws everything
 function love.draw()
-    love.graphics.setColor(1,1,1)
-    love.graphics.print("hiii", 1, 1, 0, 1, nil, 300, 200)
     if debug == true then
-        renderLines(planetList)
+        Planet.renderLines(planetList, constant)
     end
 
     for i,planet in ipairs(planetList) do
@@ -98,28 +99,6 @@ function love.keypressed(key)
     if key == "c" then
         if not clear then
             clear = true
-        end
-    end
-end
-
-function renderLines(planetList)
-    for i = 1, #planetList do
-        for j = i + 1, #planetList do
-            local planet1 = planetList[i]
-            local planet2 = planetList[j]
-            local x_component, y_component = Utils.calcVector(planet1.pos_x, planet1.pos_y,planet2.pos_x, planet2.pos_y)
-            local distance = Utils.calcMagnitude(x_component, y_component)
-
-            if distance < 800 then
-                --Prints the distance between two planet at the midpoint of the line
-                love.graphics.setColor(1, 1, 1, 400 / distance)
-                love.graphics.printf(distance, x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y, 50, "left", math.atan2(y_component, x_component), 1, nil, 0, 25)
-
-                --Draws the line between each planet
-                love.graphics.setColor(100 / distance, 0, 0, 1 - 3 / distance)
-                love.graphics.setLineWidth(Utils.clamp(1,10,Gravity.computeGravitationalForce(planet1, planet2, 6.74) / 1000000))
-                love.graphics.line(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)
-            end
         end
     end
 end
