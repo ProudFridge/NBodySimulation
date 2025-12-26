@@ -46,7 +46,7 @@ function Planet.renderLines(planetList, constant)
             if distance < 800 then
                 --Prints the distance between two planet at the midpoint of the line
                 love.graphics.setColor(1, 1, 1, 400 / distance)
-                love.graphics.print(string.format("%.2fN",distance), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y, math.atan2(y_component, x_component), 1, nil, 0, 25)
+                love.graphics.print(string.format("%.2f",distance), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y, math.atan2(y_component, x_component), 1, nil, 0, 25)
 
                 --Draws the line between each planet
                 love.graphics.setColor(100 / distance, 0, 0, 1 - 3 / distance)

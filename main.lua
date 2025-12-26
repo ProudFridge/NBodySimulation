@@ -24,7 +24,7 @@ function love.update(dt)
     --Insert new planet
     if love.keyboard.isDown("w") and timer.isDone == true then
         -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , nil, love.mouse.getX(), love.mouse.getY()))
-        table.insert(planetList, Planet:new(color, nil, 120000, nil, love.mouse.getX(), love.mouse.getY()))
+        table.insert(planetList, Planet:new(color, nil, 12000, nil, love.mouse.getX(), love.mouse.getY()))
         
         timer:reset()
         planetList[#planetList]:printInfo()
@@ -50,9 +50,10 @@ function love.update(dt)
             for j = i + 1, #planetList do
                 local planet1 = planetList[i]
                 local planet2 = planetList[j]
-                checks = checks + 1
                 local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
                 Gravity.computeVelocity(planet1, planet2, dt, force)
+
+                checks = checks + 1
             end
         end
 
