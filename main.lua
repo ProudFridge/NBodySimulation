@@ -11,20 +11,27 @@ local simulation = true
 local clear = false
 
 -- local constant = 6.6743e-11
-local constant = 4
+-- local constant = 6.6743e-2
+local constant = 6.6743e-1
+
+-- local scale = 1/1e+16
+local scale = 1/2
+
+-- local constant = 4
 function love.update(dt)
     if love.keyboard.isDown("escape") then
         love.event.quit()
     end
 
-
     timer:tick(dt)
     local checks = 0
-    local color = {1,1,0.2}
+    local color = {1,1,1}
     --Insert new planet
     if love.keyboard.isDown("w") and timer.isDone == true then
-        -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , nil, love.mouse.getX(), love.mouse.getY()))
-        table.insert(planetList, Planet:new(color, nil, 12000, nil, love.mouse.getX(), love.mouse.getY()))
+        -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , 5500000, love.mouse.getX() * (1/scale), love.mouse.getY() * (1/scale)))
+        -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , 55000, love.mouse.getX() * (1/scale), love.mouse.getY() * (1/scale)))
+        -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , nil, love.mouse.getX() * (1/scale), love.mouse.getY() * (1/scale)))
+        table.insert(planetList, Planet:new(color, nil, 100000, nil, love.mouse.getX() * (1/scale), love.mouse.getY() * (1/scale)))
         
         timer:reset()
         planetList[#planetList]:printInfo()
@@ -71,14 +78,17 @@ end
 
 -- Draws everything
 function love.draw()
-    if debug == true then
-        Planet.renderLines(planetList, constant)
-    end
+    love.graphics.push()
+    love.graphics.scale(scale, scale)
 
     for i,planet in ipairs(planetList) do
         planet:render()
         -- planet:printInfo()
     end
+    if debug == true then
+        Planet.renderLines(planetList, constant, scale)
+    end
+    love.graphics.pop()
 end
 
 
