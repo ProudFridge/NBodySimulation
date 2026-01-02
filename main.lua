@@ -11,10 +11,8 @@ local simulation = true
 local clear = false
 
 -- local constant = 6.6743e-11
--- local constant = 6.6743e-2
 local constant = 6.6743e-1
 
--- local scale = 1/1e+16
 local scale = 1/2
 
 -- local constant = 4
@@ -29,8 +27,6 @@ function love.update(dt)
     --Insert new planet
     if love.keyboard.isDown("w") and timer.isDone == true then
         -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , 5500000, love.mouse.getX() * (1/scale), love.mouse.getY() * (1/scale)))
-        -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , 55000, love.mouse.getX() * (1/scale), love.mouse.getY() * (1/scale)))
-        -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , nil, love.mouse.getX() * (1/scale), love.mouse.getY() * (1/scale)))
         table.insert(planetList, Planet:new(color, nil, 100000, nil, love.mouse.getX() * (1/scale), love.mouse.getY() * (1/scale)))
         
         timer:reset()
