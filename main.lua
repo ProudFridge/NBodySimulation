@@ -17,23 +17,6 @@ local spawnGrid = true
 local constant = 3
 local scale = 1/2
 
-function love.load()
-    if spawnGrid == true then
-        local max = 10
-        local color = {1,1,1}
-        local newPosX = 0
-        local newPosY = 0
-        for i = 1, max do
-            for j = 1, max do
-                newPosX = 1000 * i/max
-                newPosY = 1000 * j/max
-                table.insert(planetList, Planet:new(color, nil, 100000, nil, newPosX * 1/scale, newPosY * 1/scale))
-            end
-        end
-    end
-end
-
-
 -- local constant = 4
 function love.update(dt)
     if love.keyboard.isDown("escape") then
@@ -55,12 +38,10 @@ function love.update(dt)
         spawnGrid = false
     end
 
-
-
-
     timer:tick(dt)
     local checks = 0
     local color = {1,1,1}
+
     --Insert new planet
     if love.keyboard.isDown("w") and timer.isDone == true then
         local newPosX = love.mouse.getX() * (1/scale)
