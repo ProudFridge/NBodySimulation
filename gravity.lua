@@ -3,13 +3,13 @@ Gravity.__index = Gravity
 
 local Utils = require("utils")
 
-function Gravity.computeGravitationalForce(planet1, planet2, gravitational_constant)
+function Gravity.computeGravitationalForce(planet1, planet2, constant)
     -- if Utils.calcMagnitude(Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)) ~= 0 then
     --     return gravitational_constant * (planet1.mass * planet2.mass) / (Utils.calcMagnitude(Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)) ^ 2)
     -- else
     --     return 0
     -- end
-    return gravitational_constant * (planet1.mass * planet2.mass) / (Utils.calcMagnitude(Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)) ^ 2)
+    return constant * (planet1.mass * planet2.mass) / (Utils.calcMagnitude(Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)) ^ 2)
 end
 
 --Fix some error: only one planet since we seperated the two
