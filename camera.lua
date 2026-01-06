@@ -67,8 +67,26 @@ function Camera:toGlobalCoordinate(posX, posY)
 end
 
 function Camera:centerOnPosition(posX, posY)
-    local centerX, centerY = self:toGlobalCoordinate(love.graphics.getWidth() / 2 + posX, love.graphics.getHeight() / 2 + posY)
-    self:move(-centerX, -centerY)
+    local centerX, centerY = self:toGlobalCoordinate(love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
+    self:move(-centerX + posX, -centerY + posY)
+end
+
+--Zooms in or out while keeping everything centered
+--[[
+HOW IT WORKS:
+Calculates the coordinates of the center of the screen before scaling everything
+Scale everything then calculate the new coordiantes for the center of the screen, which will have changed from before
+Substract the old center coordiantes from the new ones to find the offset, which you then apply to the camera
+--]]
+function Camera:zoom(zx, zy)
+    local oldCenterX, oldCenterY = self:toGlobalCoordinate(love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
+    self:scale(zx, zy)
+    local newCenterX, newCenterY = self:toGlobalCoordinate(love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
+
+    local offsetX, offsetY = newCenterX - oldCenterX, newCenterY - oldCenterY
+    
+    self:move(-offsetX, -offsetY)
+
 end
 
 return Camera

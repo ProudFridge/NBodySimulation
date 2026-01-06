@@ -11,8 +11,7 @@ local debug = false
 local showTrail = true
 local simulation = false
 local clear = false
-local solarSystem = false
-local spawnGrid = false
+local solarSystem = true
 
 local checks = 0
 local time = 0
@@ -23,11 +22,13 @@ local camera = Camera:new()
 
 -- local constant = 6.6743e-11
 local constant = 3
+local constant = 2.9591220828559e-4
+
 
 local ratio = 1 -- each Au is  1/10px, or each pixel is equal to 10 Au
 
 function love.load()
-    --Initial planets to see if the simulation even works
+    --The planets in our solar system
     if solarSystem then
         camera:setScale(1, 1)
         camera:scale(12000)
@@ -43,6 +44,8 @@ function love.load()
         table.insert(planetList, Planet:new({255/255,204/255,153/255}, nil, 0.00028579654259599, 0.6871, 9.681157061545530e-01, -1.000423489517810e+01, 5.246396731312688e-03, -5.546463665223218e-04)) --Saturn
         table.insert(planetList, Planet:new({102/255,255/255,255/255}, nil, 4.3655207025844e-05, 1.2704, 1.806198902787260e+01, 8.416356280190394, 1.689894219169289e-03, 3.381692838015134e-03)) --Uranus
         table.insert(planetList, Planet:new({102/255,178/255,255/255}, nil, 5.1499991953912e-05, 1.6379, 2.850592355224314e+01, -9.173827312094703, 9.407596025584859e-04, 3.006460319698939e-03)) --Nepture
+        -- camera:setPosition(planetList[2].pos_x, planetList[2].pos_y)
+        camera:centerOnPosition(planetList[2].pos_x, planetList[2].pos_y)
     end
     
 end
@@ -60,7 +63,7 @@ function love.update(dt)
 
     --Spawns a grid of planets -> need to fix their position(preferably find a better way to switch between screen and global coordinates)
     if spawnGrid == true then
-        local max = 20
+        local max = 30
         local seperation = 100
         local color = {1,1,1}
         local newPosX = 0
@@ -110,7 +113,7 @@ function love.update(dt)
 
         for i, planet in ipairs(planetList) do
             Gravity.advancePosition(planet, delta)
-            -- planet:insertTrailPoint(1111200)
+            planet:insertTrailPoint(1111200)
         end
     end
 
@@ -118,17 +121,18 @@ function love.update(dt)
         print(checks)
     end
 
+    local cameraSpeed = 1000
     if love.keyboard.isDown("w") then
-        camera:move(0,-10)
+        camera:move(0,-cameraSpeed * camera.scaleX * dt)
     end
     if love.keyboard.isDown("s") then
-        camera:move(0,10)
+        camera:move(0,cameraSpeed * camera.scaleX * dt)
     end
     if love.keyboard.isDown("d") then
-        camera:move(10,0)
+        camera:move(cameraSpeed   * camera.scaleX * dt,0)
     end
     if love.keyboard.isDown("a") then
-        camera:move(-10,0)
+        camera:move(-cameraSpeed * camera.scaleX * dt,0)
     end
 
     --TODO: add the option to center the camear on any planet
@@ -145,16 +149,19 @@ function love.draw()
     love.graphics.print(string.format("%f checks", checks), 0, 12)
     love.graphics.print(string.format("%f seconds", time), 0, 24)
     love.graphics.print(string.format("Camera scale: %.3f,%.3f", camera.scaleX, camera.scaleY), 0, 36)
-    love.graphics.print(string.format("Fps: %.3f", love.timer.getFPS()), 0, 48)
+    love.graphics.print(string.format("Camera zoom: %.3f", camera.scaleX), 0, 48)
+    love.graphics.print(string.format("Camera x and y: %.3f, %.3f", camera.posX, camera.posY), 0, 60)
+    love.graphics.print(string.format("Camera x and y: %.3f, %.3f", love.graphics.getWidth(), love.graphics.getHeight()), 0, 72)
+    -- love.graphics.print(string.format("Fps: %.3f", love.timer.getFPS()), 0, 48)
 
     for i,planet in ipairs(planetList) do
-        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f", i - 1, planet.pos_x, planet.pos_y), 0, 48  + i * 12)
+        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f", i - 1, planet.pos_x, planet.pos_y), 0, 72 + i * 12)
     end
 
     camera:set()
 
     for i,planet in ipairs(planetList) do
-        planet:render(ratio)
+        planet:render(20)
     end
     if debug == true then
         Planet.renderLines(planetList, constant, camera.scaleX)
@@ -192,14 +199,10 @@ function love.keypressed(key)
         end
     end
     if key == "up" then
-        camera:scale(2)
-        local centerX, centerY = camera:toGlobalCoordinate(love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
-        camera:move(-centerX, -centerY)
+        camera:zoom(2)
     end
     if key == "down" then
-        camera:scale(1/2)
-        local centerX, centerY = camera:toGlobalCoordinate(love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
-        camera:move(-centerX, -centerY)
+        camera:zoom(0.5)
     end
     if key == "t" then
         if showTrail then

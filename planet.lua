@@ -25,33 +25,36 @@ function Planet:new(color, radius, mass, density, pos_x, pos_y, velocity_x, velo
     return newPlanet
 end
 
-function Planet:render(ratio)
+function Planet:render(scale)
     love.graphics.setColor(self.color[1], self.color[2], self.color[3])
-    love.graphics.ellipse("fill", self.pos_x * ratio, self.pos_y * ratio, self.radius * ratio, self.radius * ratio, 100)
+    love.graphics.ellipse("fill", self.pos_x, self.pos_y, self.radius * scale, self.radius * scale, 100)
     -- love.graphics.ellipse("fill", self.pos_x, self.pos_y, self.radius, self.radius, 100)
 end
 
 function Planet.renderLines(planetList, constant, scale)
     for i = 1, #planetList do
-        for j = i + 1, #planetList do
-            local planet1 = planetList[i]
-            local planet2 = planetList[j]
-            local x_component, y_component = Utils.calcVector(planet1.pos_x, planet1.pos_y,planet2.pos_x, planet2.pos_y)
-            local distance = Utils.calcMagnitude(x_component, y_component)
-            local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
+        for j = 1, #planetList do
+            if j ~= i then
+                local planet1, planet2 = planetList[i], planetList[j]
 
-            if distance < 200 then
-                --Prints the distance between two planet at the midpoint of the line
-                love.graphics.setColor(1, 1, 1, 400 / distance)
-                love.graphics.print(string.format("%.2fm",distance), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y, math.atan2(y_component, x_component), scale, nil, 0, 25)
-                -- love.graphics.print(string.format("%.10fN",force * 4e+30), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y , math.atan2(y_component, x_component), scale, nil, 0, 50)
-                love.graphics.print(string.format("%.10fN",force), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y , math.atan2(y_component, x_component), scale, nil, 0, 50)
+                -- local x_component, y_component = Utils.calcVector(planet1.pos_x, planet1.pos_y,planet2.pos_x, planet2.pos_y)
+                -- local distance = Utils.calcMagnitude(x_component, y_component)
+                -- local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
 
-                --Draws the line between each planet
-                love.graphics.setColor(100 / distance, 0, 0, 1 - 3 / distance)
-                love.graphics.setLineWidth(Utils.clamp(0,0.1,Gravity.computeGravitationalForce(planet1, planet2, constant)))
-                -- love.graphics.line(planet1.pos_x * 1/scale, planet1.pos_y * 1/scale, planet2.pos_x * 1/scale, planet2.pos_y * 1/scale)
-                love.graphics.line(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)
+                -- if distance < 200000 then
+                    -- --Prints the distance between two planet at the midpoint of the line
+                    -- love.graphics.setColor(1, 1, 1, 400 / distance)
+                    -- love.graphics.print(string.format("%.2fm",distance), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y, math.atan2(y_component, x_component), scale, nil, 0, 25)
+                    -- -- love.graphics.print(string.format("%.10fN",force * 4e+30), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y , math.atan2(y_component, x_component), scale, nil, 0, 50)
+                    -- love.graphics.print(string.format("%.10fN",force), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y , math.atan2(y_component, x_component), scale, nil, 0, 50)
+
+                    --Draws the line between each planet
+                    -- love.graphics.setColor(100 / distance, 0, 0, 1 - 3 / distance)
+
+                    love.graphics.setColor(1,1,1)
+                    love.graphics.setLineWidth(10)
+                    love.graphics.line(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)
+                -- end
             end
         end
     end
