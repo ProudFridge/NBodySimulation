@@ -28,7 +28,6 @@ end
 function Planet:render(scale)
     love.graphics.setColor(self.color[1], self.color[2], self.color[3])
     love.graphics.ellipse("fill", self.pos_x, self.pos_y, self.radius * scale, self.radius * scale, 100)
-    -- love.graphics.ellipse("fill", self.pos_x, self.pos_y, self.radius, self.radius, 100)
 end
 
 function Planet.renderLines(planetList, constant, scale)
@@ -51,8 +50,8 @@ function Planet.renderLines(planetList, constant, scale)
                     --Draws the line between each planet
                     -- love.graphics.setColor(100 / distance, 0, 0, 1 - 3 / distance)
 
-                    love.graphics.setColor(1,1,1)
-                    love.graphics.setLineWidth(10)
+                    love.graphics.setColor(planet1.color[1],planet1.color[2],planet1.color[3])
+                    love.graphics.setLineWidth(1 * scale)
                     love.graphics.line(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)
                 -- end
             end
@@ -72,9 +71,10 @@ function Planet:insertTrailPoint(maxPoints)
     table.insert(self.pointList, self.pos_y)
 end
 
-function Planet.renderTrails(planetList)
-    love.graphics.setLineWidth(0.001)
+function Planet.renderTrails(planetList, scale)
+    love.graphics.setLineWidth(1 * scale)
     for i,planet in ipairs(planetList) do
+        love.graphics.setColor(planet.color[1], planet.color[2], planet.color[3])
         love.graphics.line(planet.pointList)
     end
 end

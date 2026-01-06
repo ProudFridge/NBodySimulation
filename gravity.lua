@@ -3,16 +3,16 @@ Gravity.__index = Gravity
 
 local Utils = require("utils")
 
+--Computes the gravitational force between two objects
 function Gravity.computeGravitationalForce(planet1, planet2, constant)
-    -- if Utils.calcMagnitude(Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)) ~= 0 then
-    --     return gravitational_constant * (planet1.mass * planet2.mass) / (Utils.calcMagnitude(Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)) ^ 2)
-    -- else
-    --     return 0
-    -- end
-    return constant * (planet1.mass * planet2.mass) / (Utils.calcMagnitude(Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)) ^ 2)
+    if Utils.calcMagnitude(Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)) ~= 0 then
+        return constant * (planet1.mass * planet2.mass) / (Utils.calcMagnitude(Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)) ^ 2)
+    else
+        return 0
+    end
 end
 
---Fix some error: only one planet since we seperated the two
+--Computes the velocity of a given object based off of the force acting on it
 function Gravity.computeVelocity(planet1, planet2, dt, force)
     --Find the direction between planet1 and planet2 then find the unit vector to find the total force
     local distanceX, distanceY = Utils.calcVector(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)
