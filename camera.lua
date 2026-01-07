@@ -84,9 +84,7 @@ function Camera:zoom(zx, zy)
     local newCenterX, newCenterY = self:toGlobalCoordinate(love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
 
     local offsetX, offsetY = newCenterX - oldCenterX, newCenterY - oldCenterY
-    
     self:move(-offsetX, -offsetY)
-
 end
 
 return Camera

@@ -45,27 +45,19 @@ function love.load()
         table.insert(planetList, Planet:new({255/255,204/255,153/255}, nil, 0.00028579654259599, 0.6871, 9.681157061545530e-01, -1.000423489517810e+01, 5.246396731312688e-03, -5.546463665223218e-04)) --Saturn
         table.insert(planetList, Planet:new({102/255,255/255,255/255}, nil, 4.3655207025844e-05, 1.2704, 1.806198902787260e+01, 8.416356280190394, 1.689894219169289e-03, 3.381692838015134e-03)) --Uranus
         table.insert(planetList, Planet:new({102/255,178/255,255/255}, nil, 5.1499991953912e-05, 1.6379, 2.850592355224314e+01, -9.173827312094703, 9.407596025584859e-04, 3.006460319698939e-03)) --Nepture
-        -- camera:setPosition(planetList[2].pos_x, planetList[2].pos_y)
-        camera:centerOnPosition(planetList[2].pos_x, planetList[2].pos_y)
     end
 end
 
 function love.update(dt)
     -- dt = 10e-10
-    delta = 1
-    -- local delta = 0.0016
+    -- delta = 1/60
+    local delta = 1
     
     if love.keyboard.isDown("escape") then
         love.event.quit()
     end
 
     checks = 0
-
-    --Centers the camera on the specified planet
-    if centerOnPlanet then
-        local planet = planetList[currentPlanet + 1]
-        camera:centerOnPosition(planet.pos_x, planet.pos_y)
-    end
 
     --Spawns a grid of planets -> need to fix their position(preferably find a better way to switch between screen and global coordinates)
     if spawnGrid == true then
@@ -118,14 +110,6 @@ function love.update(dt)
         planetList[#planetList]:printInfo()
     end
 
-    --Deleting all the planets
-    if clear then
-        for i = 1, #planetList do
-            planetList[i] = nil
-        end
-        clear = false
-    end
-
     if simulation then
         time = time + delta
         --Calculate the acceleration and speed of each planet
@@ -144,7 +128,7 @@ function love.update(dt)
 
         for i, planet in ipairs(planetList) do
             Gravity.advancePosition(planet, delta)
-            planet:insertTrailPoint(1200)
+            planet:insertTrailPoint(1000, 0.1)
         end
     end
 
@@ -152,6 +136,12 @@ function love.update(dt)
         print(checks)
     end
 
+    --Centers the camera on the specified planet
+    if centerOnPlanet then
+        local planet = planetList[currentPlanet + 1]
+        camera:centerOnPosition(planet.pos_x, planet.pos_y)
+    end
+    
     local cameraSpeed = 1000
     if not centerOnPlanet then
         if love.keyboard.isDown("w") then camera:move(0, -cameraSpeed * camera.scaleX * dt) end
@@ -179,9 +169,15 @@ function love.draw()
 
     camera:set()
 
-    for i,planet in ipairs(planetList) do
-        planet:render(20)
+    planetList[1]:render(20)
+    for i = 2, #planetList do
+        local planet = planetList[i]
+        planet:render(500)
     end
+
+    -- for i ,planet in ipairs(planetList) do
+    --     planet:render(20)
+    -- end
     if debug == true then
         Planet.renderLines(planetList, constant, camera.scaleX)
     end
@@ -194,9 +190,7 @@ end
 
 function love.keypressed(key)
     if key == "c" then
-        if not clear then
-            clear = true
-        end
+        Planet.clearAllPlanets(planetList)
     end
     if key == "2" then
         if not spawnGrid then
@@ -225,5 +219,13 @@ end
 function love.mousereleased(x, y, button)
     if button == 1 then
         canSpawn = not canSpawn 
+    end
+end
+
+function love.wheelmoved(x, y)
+    if y > 0 then
+        camera:zoom(2)
+    elseif y < 0 then
+        camera:zoom(0.5)
     end
 end

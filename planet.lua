@@ -59,16 +59,33 @@ function Planet.renderLines(planetList, constant, scale)
     end
 end
 
-function Planet:insertTrailPoint(maxPoints)
+function Planet:insertTrailPoint(maxPoints, interval)
+    -- interval = interval or 0
     --Removes points when they reach a certain threshold
     if #self.pointList > maxPoints then
         table.remove(self.pointList, 1)
         table.remove(self.pointList, 1)
     end
+    
+    --Calculates the distance between the last inserted point and the current planet's position
+    local comX = self.pointList[#self.pointList-1]
+    local comY = self.pointList[#self.pointList]
 
-    --Inserts a new point each frame
-    table.insert(self.pointList, self.pos_x)
-    table.insert(self.pointList, self.pos_y)
+    local distanceX, distanceY = Utils.calcVector(comX, comY, self.pos_x, self.pos_y)
+    local magnitude = Utils.calcMagnitude(distanceX, distanceY)
+
+    if magnitude >= interval then
+        --Inserts a new point each frame
+        table.insert(self.pointList, self.pos_x)
+        table.insert(self.pointList, self.pos_y)
+
+        --Inserts some points at the end of the table that can be replace by the planet's position each frame
+        -- table.insert(self.pointList, self.pos_x)
+        -- table.insert(self.pointList, self.pos_y)
+    -- else
+    --     self.pointList[#self.pointList - 1] = self.pos_x
+    --     self.pointList[#self.pointList] = self.pos_y
+    end
 end
 
 function Planet.renderTrails(planetList, scale)
@@ -78,6 +95,13 @@ function Planet.renderTrails(planetList, scale)
         love.graphics.line(planet.pointList)
     end
 end
+
+function Planet.clearAllPlanets(planetList)
+    for i = 1, #planetList do
+            planetList[i] = nil
+    end
+end
+
 
 function Planet:printInfo()
     print("Color: ", self.r, self.g, self.b, "\nRadius: ", self.radius, "\nMass: ", self.mass, "\nDensity: ", self.density, "\nPositionX: ", self.pos_x, "\nPositionY: ", self.pos_y)
