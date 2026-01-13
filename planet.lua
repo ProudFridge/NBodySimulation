@@ -4,7 +4,7 @@ Planet.__index = Planet
 local Utils = require("utils")
 local Gravity = require("gravity")
 
-function Planet:new(color, radius, mass, density, pos_x, pos_y, velocity_x, velocity_y, acceleration_x, acceleration_y, pointList)
+function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     local newPlanet = {}
     setmetatable(newPlanet, Planet)
 
@@ -14,20 +14,17 @@ function Planet:new(color, radius, mass, density, pos_x, pos_y, velocity_x, velo
     newPlanet.density = density or 5513 --kg per cubic meter
     -- newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) * 1/10e+19 --meters
     newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) * 1 --meters
-    newPlanet.pos_x = pos_x
-    newPlanet.pos_y = pos_y
-    newPlanet.velocity_x = velocity_x or 0
-    newPlanet.velocity_y = velocity_y or 0
-    newPlanet.acceleration_x = acceleration_x or 0
-    newPlanet.acceleration_y = acceleration_y or 0
-    newPlanet.pointList = {newPlanet.pos_x, newPlanet.pos_y, newPlanet.pos_x, newPlanet.pos_y}
+    newPlanet.positionVec = positionVec
+    newPlanet.velocityVec = velocityVec
+    newPlanet.accelerationVec = {x = 0, y = 0, z = 0}
+    newPlanet.pointList = {newPlanet.positionVec.x, newPlanet.positionVec.y, newPlanet.positionVec.x, newPlanet.positionVec.y}
 
     return newPlanet
 end
 
 function Planet:render(scale)
-    love.graphics.setColor(self.color[1], self.color[2], self.color[3])
-    love.graphics.ellipse("fill", self.pos_x, self.pos_y, self.radius * scale, self.radius * scale, 100)
+    love.graphics.setColor(self.color.r, self.color.g, self.color.b)
+    love.graphics.ellipse("fill", self.positionVec.x, self.positionVec.y, self.radius * scale, self.radius * scale, 100)
 end
 
 function Planet.renderLines(planetList, constant, scale)
@@ -50,9 +47,9 @@ function Planet.renderLines(planetList, constant, scale)
                     --Draws the line between each planet
                     -- love.graphics.setColor(100 / distance, 0, 0, 1 - 3 / distance)
 
-                    love.graphics.setColor(planet1.color[1],planet1.color[2],planet1.color[3])
+                    love.graphics.setColor(planet1.color.r, planet1.color.g, planet1.color.b)
                     love.graphics.setLineWidth(1 * scale)
-                    love.graphics.line(planet1.pos_x, planet1.pos_y, planet2.pos_x, planet2.pos_y)
+                    love.graphics.line(planet1.positionVec.x, planet1.positionVec.y, planet2.positionVec.x, planet2.positionVec.y)
                 -- end
             end
         end
@@ -71,13 +68,13 @@ function Planet:insertTrailPoint(maxPoints, interval)
     local comX = self.pointList[#self.pointList-1]
     local comY = self.pointList[#self.pointList]
 
-    local distanceX, distanceY = Utils.calcVector(comX, comY, self.pos_x, self.pos_y)
-    local magnitude = Utils.calcMagnitude(distanceX, distanceY)
+    local distanceX, distanceY = Utils.calcVector(comX, comY, 0, self.positionVec.x, self.positionVec.y, 0)
+    local magnitude = Utils.calcMagnitude(distanceX, distanceY, 0)
 
     if magnitude >= interval then
         --Inserts a new point each frame
-        table.insert(self.pointList, self.pos_x)
-        table.insert(self.pointList, self.pos_y)
+        table.insert(self.pointList, self.positionVec.x)
+        table.insert(self.pointList, self.positionVec.y)
 
         --Inserts some points at the end of the table that can be replace by the planet's position each frame
         -- table.insert(self.pointList, self.pos_x)
@@ -91,7 +88,7 @@ end
 function Planet.renderTrails(planetList, scale)
     love.graphics.setLineWidth(1 * scale)
     for i,planet in ipairs(planetList) do
-        love.graphics.setColor(planet.color[1], planet.color[2], planet.color[3])
+        love.graphics.setColor(planet.color.r, planet.color.g, planet.color.b)
         love.graphics.line(planet.pointList)
     end
 end
@@ -104,7 +101,11 @@ end
 
 
 function Planet:printInfo()
-    print("Color: ", self.r, self.g, self.b, "\nRadius: ", self.radius, "\nMass: ", self.mass, "\nDensity: ", self.density, "\nPositionX: ", self.pos_x, "\nPositionY: ", self.pos_y)
+    print(string.format("Color: %d, %d, %d", self.color.r, self.color.g, self.color.b))
+    print(string.format("Radius: %d", self.radius))
+    print(string.format("Mass: %d", self.mass))
+    print(string.format("Density: %d", self.density))
+    print(string.format("Position: %d, %d, %d", self.positionVec.x, self.positionVec.y, self.positionVec.z))
 end
 
 return Planet

@@ -35,23 +35,26 @@ function love.load()
         local centerX, centerY = camera:toGlobalCoordinate(love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
         camera:move(-centerX, -centerY)
 
-        table.insert(planetList, Planet:new({255/255,255/255,0/255}, nil, 1, 100, 0, 0, 0, 0)) --Sun
-        table.insert(planetList, Planet:new({192/255,192/255,192/255}, nil, 1.66051140935277e-07, 5.4291, 1.202266214811173e-02, 3.129738317339329e-01, -3.374999571504927e-02, -3.223139133573000e-04)) --Mercury
-        table.insert(planetList, Planet:new({255/255,153/255,153/255}, nil, 2.44827371182131e-06, 5.2425, 6.036656393784035e-01, -4.041148416177896e-01, 1.125511509001221e-02, 1.664344623604423e-02)) --Venus
-        table.insert(planetList, Planet:new({51/255,255/255,51/255}, nil, 3.00329789031573e-06, 5.5134, 1.241238601620544e-02, -1.011219129247450, 1.692619974976791e-02, 1.014868174374918e-04)) --Earth
+        --Positions of the solarSystem on 2026-01-01 00:00 UT
+        table.insert(planetList, Planet:new({r=255/255,g=255/255,b=0/255}, nil, 1, 100, {x=0,y=0,z=0}, {x=0,y=0,z=0})) --Sun
+        -- table.insert(planetList, Planet:new({192/255,192/255,192/255}, nil, 1.66051140935277e-07, 5.4291, 1.202266214811173e-02, 3.129738317339329e-01, -3.374999571504927e-02, -3.223139133573000e-04)) --Mercury
+        -- table.insert(planetList, Planet:new({255/255,153/255,153/255}, nil, 2.44827371182131e-06, 5.2425, 6.036656393784035e-01, -4.041148416177896e-01, 1.125511509001221e-02, 1.664344623604423e-02)) --Venus
+        table.insert(planetList, Planet:new({r=51/255,g=255/255,b=51/255}, nil, 3.00329789031573e-06, 1, {x=-1.773625676903416E-01, y=9.622230956380571E-01, z=7.223916497206547E-05}, {x=-1.719732726632393E-02, y=-3.116668998580179E-03, z=1.014395459100633E-07})) -- Earth
+        table.insert(planetList, Planet:new({r=224/255,g=224/255,b=224/255}, nil, 3.673E-8, 1, {x=-1.763982742720193E-01, y=9.644251653583968E-01, z=2.844972803225625E-04}, {x=-1.777741715778527E-02, y=-2.873710949519302E-03, z=3.316236639603233E-06})) -- Moon
         -- table.insert(planetList, Planet:new({255/255,51/255,51/255}, nil, 3.22773848604808e-07, 3.9299, -4.926800380968982e-01, 1.537007440322637, -1.278895103122624-02, -3.109871472361932e-03)) --Mars
-        table.insert(planetList, Planet:new({255/255,51/255,51/255}, nil, 3.22773848604808e-07, 3.9299, -4.926800380968982e-01, 1.537007440322637, 1.692619974976791e-02, 1.014868174374918e-04)) --Mars
-        table.insert(planetList, Planet:new({255/255,128/255,0/255}, nil, 0.000954532562518104, 1.3262, -4.989446787630805, -2.184763688656508, 2.938669025252137e-03, -6.553859846840747e-03)) --Jupiter
-        table.insert(planetList, Planet:new({255/255,204/255,153/255}, nil, 0.00028579654259599, 0.6871, 9.681157061545530e-01, -1.000423489517810e+01, 5.246396731312688e-03, -5.546463665223218e-04)) --Saturn
-        table.insert(planetList, Planet:new({102/255,255/255,255/255}, nil, 4.3655207025844e-05, 1.2704, 1.806198902787260e+01, 8.416356280190394, 1.689894219169289e-03, 3.381692838015134e-03)) --Uranus
-        table.insert(planetList, Planet:new({102/255,178/255,255/255}, nil, 5.1499991953912e-05, 1.6379, 2.850592355224314e+01, -9.173827312094703, 9.407596025584859e-04, 3.006460319698939e-03)) --Nepture
+        -- table.insert(planetList, Planet:new({255/255,51/255,51/255}, nil, 3.22773848604808e-07, 3.9299, -4.926800380968982e-01, 1.537007440322637, 1.692619974976791e-02, 1.014868174374918e-04)) --Mars
+        -- table.insert(planetList, Planet:new({255/255,128/255,0/255}, nil, 0.000954532562518104, 1.3262, -4.989446787630805, -2.184763688656508, 2.938669025252137e-03, -6.553859846840747e-03)) --Jupiter
+        table.insert(planetList, Planet:new({r=255/255,g=128/255,b=0/255}, nil, 0.000954532562518104, 1.3262, {x=-1.697076130448002E+00, y=4.923347702917086e+00, z=1.755806051536397E-02}, {x=-7.223436992215231E-03, y=-2.101370296453924E-03, z=1.703650119141758E-04})) --Jupiter
+        -- table.insert(planetList, Planet:new({255/255,204/255,153/255}, nil, 0.00028579654259599, 0.6871, 9.681157061545530e-01, -1.000423489517810e+01, 5.246396731312688e-03, -5.546463665223218e-04)) --Saturn
+        -- table.insert(planetList, Planet:new({102/255,255/255,255/255}, nil, 4.3655207025844e-05, 1.2704, 1.806198902787260e+01, 8.416356280190394, 1.689894219169289e-03, 3.381692838015134e-03)) --Uranus
+        -- table.insert(planetList, Planet:new({102/255,178/255,255/255}, nil, 5.1499991953912e-05, 1.6379, 2.850592355224314e+01, -9.173827312094703, 9.407596025584859e-04, 3.006460319698939e-03)) --Nepture
     end
 end
 
 function love.update(dt)
     -- dt = 10e-10
     -- delta = 1/60
-    local delta = 1
+    local delta = 1/60
     
     if love.keyboard.isDown("escape") then
         love.event.quit()
@@ -139,7 +142,7 @@ function love.update(dt)
     --Centers the camera on the specified planet
     if centerOnPlanet then
         local planet = planetList[currentPlanet + 1]
-        camera:centerOnPosition(planet.pos_x, planet.pos_y)
+        camera:centerOnPosition(planet.positionVec.x, planet.positionVec.y)
     end
     
     local cameraSpeed = 1000
@@ -164,7 +167,7 @@ function love.draw()
     -- love.graphics.print(string.format("Fps: %.3f", love.timer.getFPS()), 0, 48)
 
     for i,planet in ipairs(planetList) do
-        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,  %.8f", i - 1, planet.pos_x, planet.pos_y, planet.radius), 0, 72 + i * 12)
+        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f  %.8f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z, planet.radius), 0, 72 + i * 12)
     end
 
     camera:set()
