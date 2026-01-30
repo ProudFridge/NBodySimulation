@@ -10,7 +10,6 @@ local timer = Timer.new(1)
 local debug = false
 local showTrail = true
 local simulation = false
-local clear = false
 local solarSystem = true
 local spawnGrid = false
 
@@ -60,56 +59,7 @@ function love.update(dt)
 
     checks = 0
 
-    --Spawns a grid of planets -> need to fix their position(preferably find a better way to switch between screen and global coordinates)
-    if spawnGrid == true then
-        local max = 30
-        local seperation = 100
-        local color = {1,1,1}
-        local newPosX = 0
-        local newPosY = 0
-        for i = 1, max do
-            for j = 1, max do
-                newPosX = seperation * max * i/max
-                newPosY = seperation * max * j/max
-                table.insert(planetList, Planet:new(color, nil, 100000, nil, newPosX, newPosY))
-            end
-        end
-        spawnGrid = false
-    end
-
-    --[[
-    TODO
-    Make this into a function in planet.lua
-    ]]
-    -- --Insert new planet
-    -- if preview then
-    --     local newPosX, newPosY = camera:mousePosition()
-    --     previewPlanet = Planet:new(color, nil, 1.66051140935277e-07, 3.9299, newPosX, newPosY)
-    --     points[1] = newPosX
-    --     points[2] = newPosY
-    --     points[3] = previewPlanet.pos_x
-    --     points[4] = previewPlanet.pos_y
-    --     if canSpawn then
-    --         canSpawn = false
-    --         local newPosX, newPosY = camera:mousePosition()
-    --         local newVelocityX, newVelocityY = Utils.calcVector(newPosX, newPosY, previewPlanet.pos_x, previewPlanet.pos_y)
-    --         previewPlanet.velocity_x = newVelocityX
-    --         previewPlanet.velocity_y = newVelocityY
-    --         table.insert(planetList, previewPlanet)
-        
-    --         planetList[#planetList]:printInfo()
-    --     end
-    -- end
-
-    if canSpawn then
-        local color = {1,1,1}
-        canSpawn = false
-        local newPosX, newPosY = camera:mousePosition()
-        -- table.insert(planetList, Planet:new(color, nil, 5.972 * (10 ^ 24) , 5500000, love.mouse.getX() * (1/scale), love.mouse.getY() * (1/scale)))
-        table.insert(planetList, Planet:new(color, nil, 1.66051140935277e-07, 3.9299, newPosX, newPosY))
-        
-        planetList[#planetList]:printInfo()
-    end
+    --Add a spawning function
 
     if simulation then
         time = time + delta
