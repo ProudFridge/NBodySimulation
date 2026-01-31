@@ -192,6 +192,7 @@ function love.draw()
     camera:unset()
 end
 
+--Controls
 function love.keypressed(key)
     if key == "c" then
         Planet.clearAllPlanets(planetList)
@@ -209,7 +210,7 @@ function love.keypressed(key)
     if key == "1" then debug = not debug end
     if key == "t" then showTrail = not showTrail end
     if key == "x" then centerOnPlanet = not centerOnPlanet end
-    if key == "i" then choice = (choice + 1) % #integrators end
+    if key == "i" then choice = (choice % 2) + 1 end
 
     if key == "up" then delta = delta + 0.1 end
     if key == "down" then delta = delta - 0.1 end
