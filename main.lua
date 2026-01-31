@@ -5,8 +5,6 @@ local Gravity = require("gravity")
 local Camera = require("camera")
 
 local planetList = {}
-local timer = Timer.new(1)
-
 local debug = false
 local showTrail = true
 local simulation = false
@@ -22,6 +20,9 @@ local checks = 0
 local time = 0
 
 local camera = Camera:new()
+local integrators = {"Euler", "Verlet"} --Verlet or Euler
+local choice = 1
+local delta = 1
 
 -- local constant = 6.6743e-11
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
@@ -31,8 +32,6 @@ function love.load()
     if solarSystem then
         camera:setScale(1, 1)
         camera:scale(12000)
-        local centerX, centerY = camera:toGlobalCoordinate(love.graphics.getWidth() / 2, love.graphics.getHeight() / 2)
-        camera:move(-centerX, -centerY)
 
         --Positions of the solarSystem on 2026-01-01 00:00 UT
         table.insert(planetList, Planet:new({r=255/255,g=255/255,b=0/255}, nil, 1, 100, {x=0,y=0,z=0}, {x=0,y=0,z=0})) --Sun
@@ -45,14 +44,31 @@ function love.load()
         table.insert(planetList, Planet:new({r=255/255,g=204/255,b=153/255}, nil, 0.00028579654259599, 0.6871, {x=9.504273970834813E+00, y=2.522101664364687E-01, z=-3.828040603208088E-01}, {x=-4.561877280517422E-04, y=5.564228180710301E-03, z=-7.827700476854283E-05})) --Saturn
         table.insert(planetList, Planet:new({r=102/255,g=255/255,b=255/255}, nil, 4.3655207025844e-05, 1.2704, {x=9.877240875409560E+00, y=1.679448024414335E+01, z=-6.558791407095442E-02}, {x=-3.419297363931050E-03, y=1.810588631864154E-03, z=5.115493044190684E-05})) --Uranus
         table.insert(planetList, Planet:new({r=102/255,g=178/255,b=255/255}, nil, 5.1499991953912e-05, 1.6379, {x=2.986905306243377E+01, y=5.134087037148546E-01, z=-6.989358350296304E-01}, {x=-7.477087522444120E-05, y=3.156853451464882E-03, z=-6.356496658297069E-05})) --Nepture
+
+        camera:centerOnPosition(planetList[1].positionVec.x, planetList[1].positionVec.y)
+
+        --Sets up initial values to use with verlet integration
+        for i = 1, #planetList do
+            for j = 1, #planetList do
+                if j ~= i then
+                    local planet1 = planetList[i]
+                    local planet2 = planetList[j]
+
+                    local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
+                    Gravity.computeVelocity(planet1, planet2, delta, force)
+                end 
+            end
+        end
+
+        for i = 1, #planetList do
+            Gravity.initialVerletSetup(planetList[i], delta)
+        end
     end
 end
 
 function love.update(dt)
-    -- dt = 10e-10
-    -- delta = 1/60
-    local delta = 1
-    
+    local integrator = integrators[choice]
+
     if love.keyboard.isDown("escape") then
         love.event.quit()
     end
@@ -64,22 +80,45 @@ function love.update(dt)
     if simulation then
         time = time + delta
         --Calculate the acceleration and speed of each planet
-        for i = 1, #planetList do
-            for j = 1, #planetList do
-                if j ~= i then
-                    local planet1 = planetList[i]
-                    local planet2 = planetList[j]
-                    local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-                    Gravity.computeVelocity(planet1, planet2, delta, force)
-
-                    checks = checks + 1
+        if integrator == "Euler" then
+            for i = 1, #planetList do
+                for j = 1, #planetList do
+                    if j ~= i then
+                        local planet1 = planetList[i]
+                        local planet2 = planetList[j]
+                        local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
+                        Gravity.computeVelocity(planet1, planet2, delta, force)
+                        checks = checks + 1
+                    end
+                end
+            end
+        elseif integrator == "Verlet" then
+            for i = 1, #planetList do
+                planetList[i].accelerationVec.x = 0
+                planetList[i].accelerationVec.y = 0
+                planetList[i].accelerationVec.z = 0
+            end
+            for i = 1, #planetList do
+                for j = 1, #planetList do
+                    if j ~= i then
+                        local planet1 = planetList[i]
+                        local planet2 = planetList[j]
+                        local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
+                        Gravity.computeAcceleration(planet1, planet2, delta, force)
+                        checks = checks + 1
+                    end
                 end
             end
         end
 
         for i, planet in ipairs(planetList) do
-            Gravity.advancePosition(planet, delta)
-            planet:insertTrailPoint(10000000, 0.1)
+            if integrator == "Euler" then
+                Gravity.advancePosition(planet, delta)
+            elseif integrator == "Verlet" then
+                Gravity.advanceVerlet(planet, delta)
+            end
+
+            planet:insertTrailPoint(1000, 0.1)
         end
     end
 
@@ -91,6 +130,7 @@ function love.update(dt)
     if centerOnPlanet then
         local planet = planetList[currentPlanet + 1]
         camera:centerOnPosition(planet.positionVec.x, planet.positionVec.y)
+        -- camera:centerOnPosition(planet.positionVec.x, planet.positionVec.y)
     end
     
     local cameraSpeed = 1000
@@ -105,6 +145,9 @@ end
 -- Draws everything
 function love.draw()
     love.graphics.setColor(1,1,1 )
+    love.graphics.print(string.format("%s", integrators[choice]), love.graphics.getWidth() / 2, 0)
+
+
     love.graphics.print(string.format("%.0f bodies", #planetList), 0,0)
     love.graphics.print(string.format("%.0f checks", checks), 0, 12)
     love.graphics.print(string.format("%f seconds", time), 0, 24)
@@ -112,15 +155,25 @@ function love.draw()
     love.graphics.print(string.format("Camera zoom: %.3f", camera.scaleX), 0, 48)
     love.graphics.print(string.format("Camera x and y: %.3f, %.3f", camera.posX, camera.posY), 0, 60)
     love.graphics.print(string.format("Current Planet: %.0f", currentPlanet), 0, 72)
+    love.graphics.print(string.format("delta: %.2f", delta), 0, 84)
+    love.graphics.print(string.format("Fps: %.2f", love.timer.getFPS()), 0, 96)
     -- love.graphics.print(string.format("Fps: %.3f", love.timer.getFPS()), 0, 48)
 
+    local endHeight;
     for i,planet in ipairs(planetList) do
-        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f  %.8f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z, planet.radius), 0, 72 + i * 12)
+        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f  %.8f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z, planet.radius), 0, 96 + i * 12)
+        endHeight = 96 + i * 12
     end
+    endHeight = endHeight + 12
+    for i,planet in ipairs(planetList) do
+        love.graphics.print(string.format("Planet%.0f oldPosition: %.3f,%.3f,%.3f  %.8f", i - 1, planet.oldPositionVec.x, planet.oldPositionVec.y, planet.oldPositionVec.z, planet.accelerationVec.x), 0, endHeight + (i) * 12)
+    end
+
 
     camera:set()
 
     planetList[1]:render(20)
+    --Temporary solution for the sun's huge radius
     for i = 2, #planetList do
         local planet = planetList[i]
         planet:render(500)
@@ -152,13 +205,14 @@ function love.keypressed(key)
         currentPlanet = (currentPlanet + 1) % #planetList
     end
 
-    if key == "up" then camera:zoom(2) end
-    if key == "down" then camera:zoom(0.5) end
-
     if key == "space" then simulation = not simulation end
     if key == "1" then debug = not debug end
     if key == "t" then showTrail = not showTrail end
     if key == "x" then centerOnPlanet = not centerOnPlanet end
+    if key == "i" then choice = (choice + 1) % #integrators end
+
+    if key == "up" then delta = delta + 0.1 end
+    if key == "down" then delta = delta - 0.1 end
 end
 
 function love.mousepressed(x, y, button)

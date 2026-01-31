@@ -15,6 +15,13 @@ function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     -- newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) * 1/10e+19 --meters
     newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) * 1 --meters
     newPlanet.positionVec = positionVec
+
+    --Deep copy of the positionVec
+    newPlanet.oldPositionVec = {x = 0, y = 0, z = 0}
+    newPlanet.oldPositionVec.x = newPlanet.positionVec.x --Needed when using verlet integration
+    newPlanet.oldPositionVec.y = newPlanet.positionVec.y --Needed when using verlet integration
+    newPlanet.oldPositionVec.z = newPlanet.positionVec.z --Needed when using verlet integration
+
     newPlanet.velocityVec = velocityVec
     newPlanet.accelerationVec = {x = 0, y = 0, z = 0}
     newPlanet.pointList = {newPlanet.positionVec.x, newPlanet.positionVec.y, newPlanet.positionVec.x, newPlanet.positionVec.y}
@@ -95,10 +102,9 @@ end
 
 function Planet.clearAllPlanets(planetList)
     for i = 1, #planetList do
-            planetList[i] = nil
+        planetList[i] = nil
     end
 end
-
 
 function Planet:printInfo()
     print(string.format("Color: %d, %d, %d", self.color.r, self.color.g, self.color.b))
