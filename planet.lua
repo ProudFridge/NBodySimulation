@@ -80,6 +80,9 @@ function Planet:insertTrailPoint(maxPoints, interval)
 
     if magnitude >= interval then
         --Inserts a new point each frame
+        -- self.pointList[#self.pointList - 1] = self.positionVec.x
+        -- self.pointList[#self.pointList] = self.positionVec.y
+
         table.insert(self.pointList, self.positionVec.x)
         table.insert(self.pointList, self.positionVec.y)
 

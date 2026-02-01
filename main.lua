@@ -167,7 +167,6 @@ function love.draw()
     love.graphics.print(string.format("Current Planet: %.0f", currentPlanet), 0, 72)
     love.graphics.print(string.format("delta: %.2f", delta), 0, 84)
     love.graphics.print(string.format("Fps: %.2f", love.timer.getFPS()), 0, 96)
-    -- love.graphics.print(string.format("Fps: %.3f", love.timer.getFPS()), 0, 48)
 
     local endHeight;
     for i,planet in ipairs(planetList) do
