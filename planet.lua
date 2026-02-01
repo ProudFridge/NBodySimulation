@@ -114,4 +114,24 @@ function Planet:printInfo()
     print(string.format("Position: %d, %d, %d", self.positionVec.x, self.positionVec.y, self.positionVec.z))
 end
 
+--Extend to 3D later
+function Planet.generatePlanet(planetList, distance, theta, phi, constant)
+    local positionX = distance * math.cos(theta)
+    local positionY = distance * math.sin(theta)
+
+    --For 3D, will add later
+    -- local positionX = distance * math.sin(theta) * math.cos(phi)
+    -- local positionY = distance * math.sin(theta) * math.sin(phi)
+    -- local positionZ = distance * math.cos(theta)
+
+    local velocity = math.sqrt(constant * planetList[1].mass / distance)
+
+    --(x, y) -> (-y, x) for perpendicular vectors in 2D
+    local velocityX = -velocity * (positionY / distance)
+    local velocityY = velocity * (positionX / distance)
+
+    table.insert(planetList, Planet:new({r=1,g=1,b=1}, nil, 1.66051140935277e-07, 5.4291, {x=positionX + planetList[1].positionVec.x, y=positionY + planetList[1].positionVec.y,z=0},{x=velocityX,y=velocityY,z=0}))
+
+end
+
 return Planet

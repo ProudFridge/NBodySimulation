@@ -76,6 +76,18 @@ function love.update(dt)
     checks = 0
 
     --Add a spawning function
+    if canSpawn then
+        local max = 25
+        local angle = 0;
+        local distance = 1;
+        for i = 1, max do
+            Planet.generatePlanet(planetList, distance, angle, constant)
+            distance = distance - distance / max
+            angle = angle + 2 * math.pi / max
+        end
+        -- Planet.generatePlanet(planetList, 1, math.pi / 2, constant)
+        canSpawn = not canSpawn
+    end
 
     if simulation then
         time = time + delta
@@ -118,12 +130,8 @@ function love.update(dt)
                 Gravity.advanceVerlet(planet, delta)
             end
 
-            planet:insertTrailPoint(1000, 0.1)
+            planet:insertTrailPoint(100, 0.1)
         end
-    end
-
-    if debug == true then
-        print(checks)
     end
 
     --Centers the camera on the specified planet
@@ -184,6 +192,7 @@ function love.draw()
     -- end
     if debug == true then
         Planet.renderLines(planetList, constant, camera.scaleX)
+        print(checks)
     end
     if showTrail == true then
         Planet.renderTrails(planetList, camera.scaleX)
