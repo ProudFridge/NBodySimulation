@@ -115,7 +115,7 @@ function Planet:printInfo()
 end
 
 --Extend to 3D later
-function Planet.generatePlanet(planetList, distance, theta, phi, constant)
+function Planet.generatePlanet(planetList, distance, theta, mass, constant)
     local positionX = distance * math.cos(theta)
     local positionY = distance * math.sin(theta)
 
@@ -130,7 +130,7 @@ function Planet.generatePlanet(planetList, distance, theta, phi, constant)
     local velocityX = -velocity * (positionY / distance)
     local velocityY = velocity * (positionX / distance)
 
-    table.insert(planetList, Planet:new({r=1,g=1,b=1}, nil, 1.66051140935277e-07, 5.4291, {x=positionX + planetList[1].positionVec.x, y=positionY + planetList[1].positionVec.y,z=0},{x=velocityX,y=velocityY,z=0}))
+    table.insert(planetList, Planet:new({r=1,g=1,b=1}, nil, mass, 5.4291, {x=positionX + planetList[1].positionVec.x, y=positionY + planetList[1].positionVec.y,z=0},{x=velocityX,y=velocityY,z=0}))
 
 end
 

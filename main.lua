@@ -79,9 +79,11 @@ function love.update(dt)
     if canSpawn then
         local max = 25
         local angle = 0;
-        local distance = 1;
+        local distance = 6;
+        -- local mass =1.66051140935277e-07
+        local mass =5.1499991953912e-05
         for i = 1, max do
-            Planet.generatePlanet(planetList, distance, angle, constant)
+            Planet.generatePlanet(planetList, distance, angle, mass, constant)
             distance = distance - distance / max
             angle = angle + 2 * math.pi / max
         end
