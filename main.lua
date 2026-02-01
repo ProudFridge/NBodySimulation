@@ -24,6 +24,12 @@ local integrators = {"Euler", "Verlet"} --Verlet or Euler
 local choice = 1
 local delta = 1
 
+local timer = 0;
+local angle = 0;
+local distance = 7;
+local max = 600
+
+
 -- local constant = 6.6743e-11
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
 
@@ -67,6 +73,7 @@ function love.load()
 end
 
 function love.update(dt)
+    timer = timer + dt
     local integrator = integrators[choice]
 
     if love.keyboard.isDown("escape") then
@@ -77,18 +84,26 @@ function love.update(dt)
 
     --Add a spawning function
     if canSpawn then
-        local max = 25
-        local angle = 0;
-        local distance = 6;
+    
         -- local mass =1.66051140935277e-07
         local mass =5.1499991953912e-05
-        for i = 1, max do
+        -- for i = 1, max do
+        --     Planet.generatePlanet(planetList, distance, angle, mass, constant)
+        --     distance = distance - distance / max
+        --     angle = angle + 2 * math.pi / max
+        -- end
+
+        if timer > 0 and max > 0 then
             Planet.generatePlanet(planetList, distance, angle, mass, constant)
-            distance = distance - distance / max
+            distance = distance - (distance - 1) / max
             angle = angle + 2 * math.pi / max
+            timer = 0
+            max = max - 1
         end
+
+
         -- Planet.generatePlanet(planetList, 1, math.pi / 2, constant)
-        canSpawn = not canSpawn
+        -- canSpawn = not canSpawn
     end
 
     if simulation then
