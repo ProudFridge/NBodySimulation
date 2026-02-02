@@ -121,19 +121,32 @@ end
 function Planet.generatePlanet(planetList, distance, theta, mass, constant)
     local positionX = distance * math.cos(theta)
     local positionY = distance * math.sin(theta)
+    local centerMass; 
+    local offsetX;
+    local offsetY;
+    centerMass = 1
 
     --For 3D, will add later
     -- local positionX = distance * math.sin(theta) * math.cos(phi)
     -- local positionY = distance * math.sin(theta) * math.sin(phi)
     -- local positionZ = distance * math.cos(theta)
 
-    local velocity = math.sqrt(constant * planetList[1].mass / distance)
+    if planetList[1] == nil then
+        centerMass = 1
+        offsetX = 0;
+        offsetY = 0;
+    else
+        offsetX = planetList[1].positionVec.x
+        offsetY = planetList[1].positionVec.y
+    end
+
+    local velocity = math.sqrt(constant * centerMass / distance)
 
     --(x, y) -> (-y, x) for perpendicular vectors in 2D
     local velocityX = -velocity * (positionY / distance)
     local velocityY = velocity * (positionX / distance)
 
-    table.insert(planetList, Planet:new({r=1,g=1,b=1}, nil, mass, 5.4291, {x=positionX + planetList[1].positionVec.x, y=positionY + planetList[1].positionVec.y,z=0},{x=velocityX,y=velocityY,z=0}))
+    table.insert(planetList, Planet:new({r=1,g=1,b=1}, nil, mass, 5.4291, {x=positionX + offsetX, y=positionY + offsetY,z=0},{x=velocityX,y=velocityY,z=0}))
 
 end
 
