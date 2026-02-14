@@ -21,14 +21,10 @@ local time = 0
 
 local camera = Camera:new()
 local integrators = {"Euler", "Verlet"} --Verlet or Euler
-local choice = 2
-local delta = 1
+local choice = 1
+local delta = 10
 
-local timer = 0;
--- local angle = 0;
--- local distance = 6
--- local max = 1000
-
+local scale = 1
 
 -- local constant = 6.6743e-11
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
@@ -40,7 +36,7 @@ function love.load()
         camera:scale(12000)
 
         --Positions of the solarSystem on 2026-01-01 00:00 UT
-        table.insert(planetList, Planet:new({r=255/255,g=255/255,b=0/255}, nil, 1, 2500, {x=0,y=0,z=0}, {x=0,y=0,z=0})) --Sun
+        table.insert(planetList, Planet:new({r=255/255,g=255/255,b=0/255}, nil, 1, 1408, {x=0,y=0,z=0}, {x=0,y=0,z=0})) --Sun
         table.insert(planetList, Planet:new({r=192/255,g=192/255,b=192/255}, nil, 1.66051140935277e-07, 5.4291, {x=-2.182532148826417E-01, y=-4.147503430219470E-01, z=-1.357376603300347E-02}, {x=1.923954359892052E-02, y=-1.173646867098573E-02, z=-2.723258998211985E-03})) --Mercury
         table.insert(planetList, Planet:new({r=255/255,g=153/255,b=153/255}, nil, 2.44827371182131e-06, 5.2425, {x=8.582590477234082E-02, y=-7.272937889997890E-01, z=-1.491326729034871E-02}, {x=1.994568152897905E-02, y=2.400988121393758E-03, z=-1.117598418900537E-03})) --Venus
         table.insert(planetList, Planet:new({r=51/255,g=255/255,b=51/255}, nil, 3.00329789031573e-06, 1, {x=-1.773625676903416E-01, y=9.622230956380571E-01, z=7.223916497206547E-05}, {x=-1.719732726632393E-02, y=-3.116668998580179E-03, z=1.014395459100633E-07})) -- Earth
@@ -73,7 +69,6 @@ function love.load()
 end
 
 function love.update(dt)
-    timer = timer + dt
     local integrator = integrators[choice]
 
     if love.keyboard.isDown("escape") then
@@ -82,24 +77,14 @@ function love.update(dt)
 
     checks = 0
 
-    --Add a spawning function
+    --Spawns planets throughout a certain interval
     if canSpawn then
-        local angle = 0;
-        local distance = 1
-        local max = 2000
-     
-        -- local mass =1.66051140935277e-07
-        local mass =5.1499991953912e-05
-        for i = 1, max do
-            Planet.generatePlanet(planetList, distance, angle, mass, constant)
-            angle = angle + 2 * math.pi / max
+        local from = 1
+        local to = 6
+        local max = 500
+        local mass = 5.1499991953912e-05
 
-            -- distance = distance - distance / max
-            -- distance = math.sin(6 * angle) + 2
-            distance = angle + 6 * 6
-            distance = 1 * math.sin(20 * (angle * 5)) + 6
-        end
-
+        Planet.generatePlanets(from, to, mass, max, planetList, constant)
         canSpawn = not canSpawn
     end
 
@@ -119,11 +104,13 @@ function love.update(dt)
                 end
             end
         elseif integrator == "Verlet" then
+
             for i = 1, #planetList do
                 planetList[i].accelerationVec.x = 0
                 planetList[i].accelerationVec.y = 0
                 planetList[i].accelerationVec.z = 0
             end
+
             for i = 1, #planetList do
                 for j = 1, #planetList do
                     if j ~= i then
@@ -182,26 +169,16 @@ function love.draw()
 
     -- local endHeight;
     for i,planet in ipairs(planetList) do
-        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f  %.8f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z, planet.radius), 0, 96 + i * 12)
-        -- endHeight = 96 + i * 12
+        -- love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f  %.8f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z, planet.radius), 0, 96 + i * 12)
+        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f  %.8f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z, planet.velocityVec.x), 0, 96 + i * 12)
     end
-    -- endHeight = endHeight + 12
-    -- for i,planet in ipairs(planetList) do
-    --     love.graphics.print(string.format("Planet%.0f oldPosition: %.3f,%.3f,%.3f  %.8f", i - 1, planet.oldPositionVec.x, planet.oldPositionVec.y, planet.oldPositionVec.z, planet.accelerationVec.x), 0, endHeight + (i) * 12)
-    -- end
 
 
     camera:set()
 
-    --Temporary solution for the sun's huge radius
-    for i = 1, #planetList do
-        local planet = planetList[i]
-        planet:render(500)
+    for _,planet in ipairs(planetList) do
+        planet:render(scale)
     end
-
-    -- for i ,planet in ipairs(planetList) do
-    --     planet:render(20)
-    -- end
     if debug == true then
         Planet.renderLines(planetList, constant, camera.scaleX)
         print(checks)

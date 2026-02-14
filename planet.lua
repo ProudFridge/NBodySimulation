@@ -11,9 +11,9 @@ function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     --Creating the fields for the new object
     newPlanet.color = color
     newPlanet.mass = mass --kg
-    newPlanet.density = density or 5513 --kg per cubic meter
+    newPlanet.density = density or 5.513 --kg per cubic meter
     -- newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) * 1/10e+19 --meters
-    newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) * 1 --meters
+    newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) --meters
     newPlanet.positionVec = positionVec
 
     --Deep copy of the positionVec
@@ -31,28 +31,16 @@ end
 
 function Planet:render(scale)
     love.graphics.setColor(self.color.r, self.color.g, self.color.b)
-    love.graphics.ellipse("fill", self.positionVec.x, self.positionVec.y, self.radius * scale, self.radius * scale, 100)
+    love.graphics.ellipse("fill", self.positionVec.x * scale, self.positionVec.y * scale, self.radius * scale, self.radius * scale, 1000)
+    -- love.graphics.ellipse("fill", self.positionVec.x, self.positionVec.y, self.radius * scale, self.radius * scale, 1000)
 end
 
+--Renders lines between each planet
 function Planet.renderLines(planetList, constant, scale)
     for i = 1, #planetList do
         for j = 1, #planetList do
             if j ~= i then
                 local planet1, planet2 = planetList[i], planetList[j]
-
-                -- local x_component, y_component = Utils.calcVector(planet1.pos_x, planet1.pos_y,planet2.pos_x, planet2.pos_y)
-                -- local distance = Utils.calcMagnitude(x_component, y_component)
-                -- local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-
-                -- if distance < 200000 then
-                    -- --Prints the distance between two planet at the midpoint of the line
-                    -- love.graphics.setColor(1, 1, 1, 400 / distance)
-                    -- love.graphics.print(string.format("%.2fm",distance), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y, math.atan2(y_component, x_component), scale, nil, 0, 25)
-                    -- -- love.graphics.print(string.format("%.10fN",force * 4e+30), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y , math.atan2(y_component, x_component), scale, nil, 0, 50)
-                    -- love.graphics.print(string.format("%.10fN",force), x_component / 2 + planet1.pos_x, y_component / 2 + planet1.pos_y , math.atan2(y_component, x_component), scale, nil, 0, 50)
-
-                    --Draws the line between each planet
-                    -- love.graphics.setColor(100 / distance, 0, 0, 1 - 3 / distance)
 
                     love.graphics.setColor(planet1.color.r, planet1.color.g, planet1.color.b)
                     love.graphics.setLineWidth(1 * scale)
@@ -118,26 +106,24 @@ function Planet:printInfo()
 end
 
 --Extend to 3D later
-function Planet.generatePlanet(planetList, distance, theta, mass, constant)
+--Rename to somethign like genrateircularOrbit
+function Planet.generateCircularOrbitPlanet(planetList, distance, theta, mass, constant)
     local positionX = distance * math.cos(theta)
     local positionY = distance * math.sin(theta)
-    local centerMass; 
-    local offsetX;
-    local offsetY;
-    centerMass = 1
 
-    --For 3D, will add later
-    -- local positionX = distance * math.sin(theta) * math.cos(phi)
-    -- local positionY = distance * math.sin(theta) * math.sin(phi)
-    -- local positionZ = distance * math.cos(theta)
+    local offsetX
+    local offsetY
+    local centerMass
 
+    --Temporary fix to whenever a the simualtion is cleared
     if planetList[1] == nil then
         centerMass = 1
-        offsetX = 0;
-        offsetY = 0;
+        offsetX = 0
+        offsetY = 0
     else
         offsetX = planetList[1].positionVec.x
         offsetY = planetList[1].positionVec.y
+        centerMass = planetList[1].mass
     end
 
     local velocity = math.sqrt(constant * centerMass / distance)
@@ -147,7 +133,23 @@ function Planet.generatePlanet(planetList, distance, theta, mass, constant)
     local velocityY = velocity * (positionX / distance)
 
     table.insert(planetList, Planet:new({r=1,g=1,b=1}, nil, mass, 5.4291, {x=positionX + offsetX, y=positionY + offsetY,z=0},{x=velocityX,y=velocityY,z=0}))
+end
 
+function Planet.generatePlanets(minimum, maximum, mass, numberOfPlanets, planetList, constant)
+    local angle = 0;
+    local distance
+    
+    for i = 1, numberOfPlanets do
+        distance = minimum + (maximum - minimum) * love.math.random()
+
+        Planet.generateCircularOrbitPlanet(planetList, distance, angle, mass, constant)
+        angle = angle + 2 * math.pi / numberOfPlanets
+
+        -- distance = distance - distance / max
+        -- distance = math.sin(6 * angle) + 2
+        -- distance = angle + 6 * 6
+        -- distance = 1 * math.sin(2 * (angle * 5)) + 6
+    end
 end
 
 return Planet
