@@ -12,7 +12,6 @@ function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     newPlanet.color = color
     newPlanet.mass = mass --kg
     newPlanet.density = density or 5.513 --kg per cubic meter
-    -- newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) * 1/10e+19 --meters
     newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) --meters
     newPlanet.positionVec = positionVec
 
@@ -31,7 +30,7 @@ end
 
 function Planet:render(scale)
     love.graphics.setColor(self.color.r, self.color.g, self.color.b)
-    love.graphics.ellipse("fill", self.positionVec.x * scale, self.positionVec.y * scale, self.radius * scale, self.radius * scale, 1000)
+    love.graphics.ellipse("fill", self.positionVec.x * scale, self.positionVec.y * scale, self.radius * scale, self.radius * scale, 10000)
     -- love.graphics.ellipse("fill", self.positionVec.x, self.positionVec.y, self.radius * scale, self.radius * scale, 1000)
 end
 
@@ -42,16 +41,15 @@ function Planet.renderLines(planetList, constant, scale)
             if j ~= i then
                 local planet1, planet2 = planetList[i], planetList[j]
 
-                    love.graphics.setColor(planet1.color.r, planet1.color.g, planet1.color.b)
-                    love.graphics.setLineWidth(1 * scale)
-                    love.graphics.line(planet1.positionVec.x, planet1.positionVec.y, planet2.positionVec.x, planet2.positionVec.y)
-                -- end
+                love.graphics.setColor(planet1.color.r, planet1.color.g, planet1.color.b)
+                love.graphics.setLineWidth(1 * scale)
+                love.graphics.line(planet1.positionVec.x, planet1.positionVec.y, planet2.positionVec.x, planet2.positionVec.y)
             end
         end
     end
 end
 
-function Planet:insertTrailPoint(maxPoints, interval)
+function Planet:insertTrailPoint(maxPoints, interval, scale)
     -- interval = interval or 0
     --Removes points when they reach a certain threshold
     if #self.pointList > maxPoints then
@@ -67,19 +65,8 @@ function Planet:insertTrailPoint(maxPoints, interval)
     local magnitude = Utils.calcMagnitude(distanceX, distanceY, 0)
 
     if magnitude >= interval then
-        --Inserts a new point each frame
-        -- self.pointList[#self.pointList - 1] = self.positionVec.x
-        -- self.pointList[#self.pointList] = self.positionVec.y
-
-        table.insert(self.pointList, self.positionVec.x)
-        table.insert(self.pointList, self.positionVec.y)
-
-        --Inserts some points at the end of the table that can be replace by the planet's position each frame
-        -- table.insert(self.pointList, self.pos_x)
-        -- table.insert(self.pointList, self.pos_y)
-    -- else
-    --     self.pointList[#self.pointList - 1] = self.pos_x
-    --     self.pointList[#self.pointList] = self.pos_y
+        table.insert(self.pointList, self.positionVec.x * scale)
+        table.insert(self.pointList, self.positionVec.y * scale)
     end
 end
 
@@ -106,14 +93,9 @@ function Planet:printInfo()
 end
 
 --Extend to 3D later
---Rename to somethign like genrateircularOrbit
 function Planet.generateCircularOrbitPlanet(planetList, distance, theta, mass, constant)
     local positionX = distance * math.cos(theta)
     local positionY = distance * math.sin(theta)
-
-    local offsetX
-    local offsetY
-    local centerMass
 
     --Temporary fix to whenever a the simualtion is cleared
     if planetList[1] == nil then
@@ -132,7 +114,7 @@ function Planet.generateCircularOrbitPlanet(planetList, distance, theta, mass, c
     local velocityX = -velocity * (positionY / distance)
     local velocityY = velocity * (positionX / distance)
 
-    table.insert(planetList, Planet:new({r=1,g=1,b=1}, nil, mass, 5.4291, {x=positionX + offsetX, y=positionY + offsetY,z=0},{x=velocityX,y=velocityY,z=0}))
+    table.insert(planetList, Planet:new({r=1,g=1,b=1}, nil, mass, 1.6379, {x=positionX + offsetX, y=positionY + offsetY,z=0},{x=velocityX,y=velocityY,z=0}))
 end
 
 function Planet.generatePlanets(minimum, maximum, mass, numberOfPlanets, planetList, constant)
