@@ -17,7 +17,7 @@ local currentPlanet = 0
 local canSpawn = false
 
 local checks = 0
-local time = 0
+local totalTime = 0
 
 local camera = Camera:new()
 --Test
@@ -33,14 +33,14 @@ end
 
 local integrators = {"Euler", "Verlet"} --Verlet or Euler
 local choice = 1
-local delta = 1
+local delta = 0.1
 
 local realTime = false;
-
 local scale = 1
 
 -- local constant = 6.6743e-11
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
+local iterationTime = 10 --In days
 
 function love.load()
     camera:setScale(1, 1)
@@ -97,6 +97,7 @@ function love.load()
 end
 
 function love.update(dt)
+
     local integrator = integrators[choice]
 
     if love.keyboard.isDown("escape") then
@@ -117,53 +118,57 @@ function love.update(dt)
         Planet.generatePlanets(from, to, mass, max, planetList, constant)
         canSpawn = not canSpawn
     end
-
+    
     if simulation then
-        time = time + delta
-        --Calculate the acceleration and speed of each planet
-        if integrator == "Euler" then
-            for i = 1, #planetList do
-                for j = 1, #planetList do
-                    if j ~= i then
-                        local planet1 = planetList[i]
-                        local planet2 = planetList[j]
-                        local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-                        Gravity.computeVelocity(planet1, planet2, delta, force)
-                        checks = checks + 1
-                    end
-                end
-            end
-        elseif integrator == "Verlet" then
+        if totalTime < iterationTime then
+            totalTime = totalTime + delta
 
-            for i = 1, #planetList do
-                planetList[i].accelerationVec.x = 0
-                planetList[i].accelerationVec.y = 0
-                planetList[i].accelerationVec.z = 0
-            end
-
-            for i = 1, #planetList do
-                for j = 1, #planetList do
-                    if j ~= i then
-                        local planet1 = planetList[i]
-                        local planet2 = planetList[j]
-                        local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-                        Gravity.computeAcceleration(planet1, planet2, delta, force)
-                        checks = checks + 1
-                    end
-                end
-            end
-        end
-
-        for _, planet in ipairs(planetList) do
+            --Calculate the acceleration and speed of each planet
             if integrator == "Euler" then
-                Gravity.advancePosition(planet, delta)
+                for i = 1, #planetList do
+                    for j = 1, #planetList do
+                        if j ~= i then
+                            local planet1 = planetList[i]
+                            local planet2 = planetList[j]
+                            local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
+                            Gravity.computeVelocity(planet1, planet2, delta, force)
+                            checks = checks + 1
+                        end
+                    end
+                end
             elseif integrator == "Verlet" then
-                Gravity.advanceVerlet(planet, delta)
+
+                for i = 1, #planetList do
+                    planetList[i].accelerationVec.x = 0
+                    planetList[i].accelerationVec.y = 0
+                    planetList[i].accelerationVec.z = 0
+                end
+
+                for i = 1, #planetList do
+                    for j = 1, #planetList do
+                        if j ~= i then
+                            local planet1 = planetList[i]
+                            local planet2 = planetList[j]
+                            local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
+                            Gravity.computeAcceleration(planet1, planet2, delta, force)
+                            checks = checks + 1
+                        end
+                    end
+                end
             end
 
-            planet:insertTrailPoint(100, 0.1, scale)
+            for _, planet in ipairs(planetList) do
+                if integrator == "Euler" then
+                    Gravity.advancePosition(planet, delta)
+                elseif integrator == "Verlet" then
+                    Gravity.advanceVerlet(planet, delta)
+                end
+
+                planet:insertTrailPoint(100, 0.1, scale)
+            end
         end
     end
+        
 
     --Centers the camera on the specified planet
     if centerOnPlanet then
@@ -188,7 +193,7 @@ function love.draw()
 
     love.graphics.print(string.format("%.0f bodies", #planetList), 0,0)
     love.graphics.print(string.format("%.0f checks", checks), 0, 12)
-    love.graphics.print(string.format("%f seconds", time), 0, 24)
+    love.graphics.print(string.format("%f seconds", totalTime), 0, 24)
     love.graphics.print(string.format("Camera scale: %.3f,%.3f", camera.scaleX, camera.scaleY), 0, 36)
     love.graphics.print(string.format("Camera zoom: %.3f", camera.scaleX), 0, 48)
     love.graphics.print(string.format("Camera x and y: %.3f, %.3f", camera.posX, camera.posY), 0, 60)
