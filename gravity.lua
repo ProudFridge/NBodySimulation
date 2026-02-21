@@ -1,5 +1,4 @@
 local Gravity = {}
-Gravity.__index = Gravity
 
 local Utils = require("utils")
 

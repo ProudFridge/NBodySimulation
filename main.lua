@@ -3,6 +3,7 @@ local Timer = require("timer")
 local Utils = require("utils")
 local Gravity = require("gravity")
 local Camera = require("camera")
+local Plot = require("plot")
 
 local planetList = {}
 local debug = false
@@ -14,12 +15,22 @@ local spawnGrid = false
 local centerOnPlanet = false
 local currentPlanet = 0
 local canSpawn = false
-local preview = false
 
 local checks = 0
 local time = 0
 
 local camera = Camera:new()
+--Test
+local plotWidth = 400
+local plotHeight = 200
+
+--Testing the plot
+local plot = Plot:new(10, love.graphics.getHeight() - plotHeight - 10, plotWidth, plotHeight, 10, 10)
+local precision = 0.01
+for i = 1, plot.XAxisLength, precision do
+    plot:insertNewPoint(i, 5*math.sin(i) + 10)
+end
+
 local integrators = {"Euler", "Verlet"} --Verlet or Euler
 local choice = 1
 local delta = 1
@@ -46,16 +57,24 @@ function love.load()
         camera:scale(12000)
 
         --Positions of the solarSystem on 2026-01-01 00:00 UT
-        table.insert(planetList, Planet:new({r=255/255,g=255/255,b=0/255}, nil, 1, 1408, {x=0,y=0,z=0}, {x=0,y=0,z=0})) --Sun
-        table.insert(planetList, Planet:new({r=192/255,g=192/255,b=192/255}, 1.63e-05, 1.66051140935277e-07, 5.4291, {x=-2.182532148826417E-01, y=-4.147503430219470E-01, z=-1.357376603300347E-02}, {x=1.923954359892052E-02, y=-1.173646867098573E-02, z=-2.723258998211985E-03})) --Mercury
-        table.insert(planetList, Planet:new({r=255/255,g=153/255,b=153/255}, 4.05e-05, 2.44827371182131e-06, 5.2425, {x=8.582590477234082E-02, y=-7.272937889997890E-01, z=-1.491326729034871E-02}, {x=1.994568152897905E-02, y=2.400988121393758E-03, z=-1.117598418900537E-03})) --Venus
-        table.insert(planetList, Planet:new({r=51/255,g=255/255,b=51/255}, 4.26e-05, 3.00329789031573e-06, 1, {x=-1.773625676903416E-01, y=9.622230956380571E-01, z=7.223916497206547E-05}, {x=-1.719732726632393E-02, y=-3.116668998580179E-03, z=1.014395459100633E-07})) -- Earth
-        table.insert(planetList, Planet:new({r=224/255,g=224/255,b=224/255}, 1.16e-05, 3.673e-8, 1, {x=-1.763982742720193E-01, y=9.644251653583968E-01, z=2.844972803225625E-04}, {x=-1.777741715778527E-02, y=-2.873710949519302E-03, z=3.316236639603233E-06})) -- Moon
-        table.insert(planetList, Planet:new({r=255/255,g=51/255,b=51/255}, 2.27e-05, 3.22773848604808e-07, 3.9299, {x=3.375236724053181E-01, y=-1.392531709307832E+00, z=-3.728574375535873E-02}, {x=1.412656035077045E-02, y=4.540493711705869E-03, z=-2.512182043289334E-04})) --Mars
-        table.insert(planetList, Planet:new({r=255/255,g=128/255,b=0/255}, 4.67e-04, 0.000954532562518104, 1.3262, {x=-1.697076130448002E+00, y=4.923347702917086e+00, z=1.755806051536397E-02}, {x=-7.223436992215231E-03, y=-2.101370296453924E-03, z=1.703650119141758E-04})) --Jupiter
-        table.insert(planetList, Planet:new({r=255/255,g=204/255,b=153/255}, 3.89e-04, 0.00028579654259599, 0.6871, {x=9.504273970834813E+00, y=2.522101664364687E-01, z=-3.828040603208088E-01}, {x=-4.561877280517422E-04, y=5.564228180710301E-03, z=-7.827700476854283E-05})) --Saturn
-        table.insert(planetList, Planet:new({r=102/255,g=255/255,b=255/255}, 1.70e-04, 4.3655207025844e-05, 1.2704, {x=9.877240875409560E+00, y=1.679448024414335E+01, z=-6.558791407095442E-02}, {x=-3.419297363931050E-03, y=1.810588631864154E-03, z=5.115493044190684E-05})) --Uranus
-        table.insert(planetList, Planet:new({r=102/255,g=178/255,b=255/255}, 1.65e-04, 5.1499991953912e-05, 1.6379, {x=2.986905306243377E+01, y=5.134087037148546E-01, z=-6.989358350296304E-01}, {x=-7.477087522444120E-05, y=3.156853451464882E-03, z=-6.356496658297069E-05})) --Nepture
+        local solarSystem = {
+            {{r=255/255,g=255/255,b=0/255}, nil, 1, 1408, {x=0,y=0,z=0}, {x=0,y=0,z=0}}, --Sun
+            {{r=192/255,g=192/255,b=192/255}, 1.63e-05, 1.66051140935277e-07, 5.4291, {x=-2.182532148826417E-01, y=-4.147503430219470E-01, z=-1.357376603300347E-02}, {x=1.923954359892052E-02, y=-1.173646867098573E-02, z=-2.723258998211985E-03}}, --Mercury
+            {{r=255/255,g=153/255,b=153/255}, 4.05e-05, 2.44827371182131e-06, 5.2425, {x=8.582590477234082E-02, y=-7.272937889997890E-01, z=-1.491326729034871E-02}, {x=1.994568152897905E-02, y=2.400988121393758E-03, z=-1.117598418900537E-03}}, --Venus
+            {{r=51/255,g=255/255,b=51/255}, 4.26e-05, 3.00329789031573e-06, 1, {x=-1.773625676903416E-01, y=9.622230956380571E-01, z=7.223916497206547E-05}, {x=-1.719732726632393E-02, y=-3.116668998580179E-03, z=1.014395459100633E-07}}, -- Earth
+            {{r=224/255,g=224/255,b=224/255}, 1.16e-05, 3.673e-8, 1, {x=-1.763982742720193E-01, y=9.644251653583968E-01, z=2.844972803225625E-04}, {x=-1.777741715778527E-02, y=-2.873710949519302E-03, z=3.316236639603233E-06}}, -- Moon
+            {{r=255/255,g=51/255,b=51/255}, 2.27e-05, 3.22773848604808e-07, 3.9299, {x=3.375236724053181E-01, y=-1.392531709307832E+00, z=-3.728574375535873E-02}, {x=1.412656035077045E-02, y=4.540493711705869E-03, z=-2.512182043289334E-04}},--Mars
+            {{r=255/255,g=128/255,b=0/255}, 4.67e-04, 0.000954532562518104, 1.3262, {x=-1.697076130448002E+00, y=4.923347702917086e+00, z=1.755806051536397E-02}, {x=-7.223436992215231E-03, y=-2.101370296453924E-03, z=1.703650119141758E-04}},--Jupiter
+            {{r=255/255,g=204/255,b=153/255}, 3.89e-04, 0.00028579654259599, 0.6871, {x=9.504273970834813E+00, y=2.522101664364687E-01, z=-3.828040603208088E-01}, {x=-4.561877280517422E-04, y=5.564228180710301E-03, z=-7.827700476854283E-05}}, --Saturn
+            {{r=102/255,g=255/255,b=255/255}, 1.70e-04, 4.3655207025844e-05, 1.2704, {x=9.877240875409560E+00, y=1.679448024414335E+01, z=-6.558791407095442E-02}, {x=-3.419297363931050E-03, y=1.810588631864154E-03, z=5.115493044190684E-05}},--Uranus
+            {{r=102/255,g=178/255,b=255/255}, 1.65e-04, 5.1499991953912e-05, 1.6379, {x=2.986905306243377E+01, y=5.134087037148546E-01, z=-6.989358350296304E-01}, {x=-7.477087522444120E-05, y=3.156853451464882E-03, z=-6.356496658297069E-05}} --Nepture
+        }
+
+        for i = 1, #solarSystem do
+            local newPlanet = solarSystem[i]
+            table.insert(planetList, Planet:new(newPlanet[1], newPlanet[2], newPlanet[3], newPlanet[4], newPlanet[5], newPlanet[6]))
+        end
+        
         camera:centerOnPosition(planetList[1].positionVec.x * scale, planetList[1].positionVec.y * scale)
 
         --Sets up initial values to use with verlet integration
@@ -90,9 +109,9 @@ function love.update(dt)
 
     --Spawns planets throughout a certain interval
     if canSpawn then
-        local from = 1
-        local to = 6
-        local max = 500
+        local from = 0.1
+        local to = 0.5
+        local max = 100
         local mass = 5.1499991953912e-05
 
         Planet.generatePlanets(from, to, mass, max, planetList, constant)
@@ -181,6 +200,8 @@ function love.draw()
         love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f  %.15f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z, planet.radius * scale), 0, 96 + i * 12)
     end
 
+    plot:render()
+
     camera:set()
 
     -- if planetList[1] ~= nil then
@@ -221,6 +242,7 @@ function love.keypressed(key, scancode, isrepeat)
     if key == "t" then showTrail = not showTrail end
     if key == "x" then centerOnPlanet = not centerOnPlanet end
     if key == "i" then choice = (choice % 2) + 1 end
+    if key == "l" then canSpawn = not canSpawn end
 
     if key == "up" then delta = delta + 0.1 end
     if key == "down" then delta = delta - 0.1 end
@@ -228,20 +250,15 @@ end
 
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
-        preview = not preview
-    end
-end
-
-function love.mousereleased(x, y, button, istouch, presses)
-    if button == 1 then
-        canSpawn = not canSpawn
+        plot.XAxisLength = plot.XAxisLength / 2
+        plot.YAxisLength = plot.YAxisLength / 2
     end
 end
 
 function love.wheelmoved(x, y)
     if y > 0 then
-        camera:zoom(2)
+        camera:zoom(1.1)
     elseif y < 0 then
-        camera:zoom(0.5)
+        camera:zoom(0.9)
     end
 end

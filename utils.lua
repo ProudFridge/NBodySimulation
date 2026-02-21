@@ -1,5 +1,4 @@
 local Utils = {}
--- Utils.__index = Utils
 
 function Utils.calcVector(pos_x1, pos_y1, pos_z1, pos_x2, pos_y2, pos_z2)
     return pos_x2 - pos_x1, pos_y2 - pos_y1, pos_z2 - pos_z1
