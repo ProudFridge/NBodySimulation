@@ -20,27 +20,29 @@ local checks = 0
 local totalTime = 0
 
 local camera = Camera:new()
+local cameraSpeed = 1000
+
 --Test
 local plotWidth = 400
 local plotHeight = 200
 
 --Testing the plot
-local plot = Plot:new(10, love.graphics.getHeight() - plotHeight - 10, plotWidth, plotHeight, 10, 10)
-local precision = 0.01
-for i = 1, plot.XAxisLength, precision do
+local plot = Plot:new(10, love.graphics.getHeight() - plotHeight - 10, plotWidth, plotHeight, 10,50)
+local precision = 0.1
+for i = 0, plot.XAxisLength, precision do
     plot:insertNewPoint(i, 5*math.sin(i) + 10)
 end
 
 local integrators = {"Euler", "Verlet"} --Verlet or Euler
 local choice = 1
-local delta = 0.1
+local delta = 1
 
 local realTime = false;
 local scale = 1
 
 -- local constant = 6.6743e-11
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
-local iterationTime = 10 --In days
+local iterationTime = math.huge --In days
 
 function love.load()
     camera:setScale(1, 1)
@@ -78,26 +80,11 @@ function love.load()
         camera:centerOnPosition(planetList[1].positionVec.x * scale, planetList[1].positionVec.y * scale)
 
         --Sets up initial values to use with verlet integration
-        for i = 1, #planetList do
-            for j = 1, #planetList do
-                if j ~= i then
-                    local planet1 = planetList[i]
-                    local planet2 = planetList[j]
-
-                    local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-                    Gravity.computeVelocity(planet1, planet2, delta, force)
-                end 
-            end
-        end
-
-        for i = 1, #planetList do
-            Gravity.initialVerletSetup(planetList[i], delta)
-        end
+        Planet.verletIntegratorSetup(planetList, constant, delta)
     end
 end
 
 function love.update(dt)
-
     local integrator = integrators[choice]
 
     if love.keyboard.isDown("escape") then
@@ -123,52 +110,14 @@ function love.update(dt)
         if totalTime < iterationTime then
             totalTime = totalTime + delta
 
-            --Calculate the acceleration and speed of each planet
+            --Simulates the system
             if integrator == "Euler" then
-                for i = 1, #planetList do
-                    for j = 1, #planetList do
-                        if j ~= i then
-                            local planet1 = planetList[i]
-                            local planet2 = planetList[j]
-                            local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-                            Gravity.computeVelocity(planet1, planet2, delta, force)
-                            checks = checks + 1
-                        end
-                    end
-                end
+                Planet.eulerIntegrator(planetList, constant, delta, checks, scale)
             elseif integrator == "Verlet" then
-
-                for i = 1, #planetList do
-                    planetList[i].accelerationVec.x = 0
-                    planetList[i].accelerationVec.y = 0
-                    planetList[i].accelerationVec.z = 0
-                end
-
-                for i = 1, #planetList do
-                    for j = 1, #planetList do
-                        if j ~= i then
-                            local planet1 = planetList[i]
-                            local planet2 = planetList[j]
-                            local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-                            Gravity.computeAcceleration(planet1, planet2, delta, force)
-                            checks = checks + 1
-                        end
-                    end
-                end
-            end
-
-            for _, planet in ipairs(planetList) do
-                if integrator == "Euler" then
-                    Gravity.advancePosition(planet, delta)
-                elseif integrator == "Verlet" then
-                    Gravity.advanceVerlet(planet, delta)
-                end
-
-                planet:insertTrailPoint(100, 0.1, scale)
+                Planet.verletIntegrator(planetList, constant, delta, checks, scale)
             end
         end
     end
-        
 
     --Centers the camera on the specified planet
     if centerOnPlanet then
@@ -176,7 +125,6 @@ function love.update(dt)
         camera:centerOnPosition(planet.positionVec.x * scale, planet.positionVec.y * scale)
     end
     
-    local cameraSpeed = 1000
     if not centerOnPlanet then
         if love.keyboard.isDown("w") then camera:move(0, -cameraSpeed * camera.scaleX * dt) end
         if love.keyboard.isDown("s") then camera:move(0, cameraSpeed * camera.scaleX * dt) end
@@ -208,10 +156,6 @@ function love.draw()
     plot:render()
 
     camera:set()
-
-    -- if planetList[1] ~= nil then
-    --     planetList[1]:render(1);
-    -- end
 
     for i = 1, #planetList do
         local planet = planetList[i]

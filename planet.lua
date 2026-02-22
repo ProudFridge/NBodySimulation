@@ -34,6 +34,71 @@ function Planet:render(scale)
     -- love.graphics.ellipse("fill", self.positionVec.x, self.positionVec.y, self.radius * scale, self.radius * scale, 1000)
 end
 
+--Iterates over a planetList and advances each planet's position using Euler integration
+function Planet.eulerIntegrator(planetList, constant, delta, checks, scale)
+    for i = 1, #planetList do
+        for j = 1, #planetList do 
+            if j ~= i then
+                local planet1 = planetList[i]
+                local planet2 = planetList[j]
+                local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
+                Gravity.computeVelocity(planet1, planet2, delta, force)
+                checks = checks + 1
+            end
+        end
+    end
+    
+    for i = 1, #planetList do
+        Gravity.advancePosition(planetList[i], delta)
+        planetList[i]:insertTrailPoint(100, 0.1, scale)
+    end
+end
+
+--The following method must be used at the start of the simulation so that Verlet integration will work
+function Planet.verletIntegratorSetup(planetList, constant, delta)
+    for i = 1, #planetList do
+        for j = 1, #planetList do
+            if j ~= i then
+                local planet1 = planetList[i]
+                local planet2 = planetList[j]
+
+                local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
+                Gravity.computeVelocity(planet1, planet2, delta, force)
+            end 
+        end
+    end
+
+    for i = 1, #planetList do
+        Gravity.initialVerletSetup(planetList[i], delta)
+    end
+end
+
+--Iterates over a planetList and advances each planet's position using Verlet integration
+function Planet.verletIntegrator(planetList, constant, delta, checks, scale)
+    for i = 1, #planetList do
+        planetList[i].accelerationVec.x = 0
+        planetList[i].accelerationVec.y = 0
+        planetList[i].accelerationVec.z = 0
+    end
+
+    for i = 1, #planetList do
+        for j = 1, #planetList do
+            if j ~= i then
+                local planet1 = planetList[i]
+                local planet2 = planetList[j]
+                local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
+                Gravity.computeAcceleration(planet1, planet2, delta, force)
+                checks = checks + 1
+            end
+        end
+    end
+
+    for i = 1, #planetList do
+        Gravity.advanceVerlet(planetList[i], delta)
+        planetList[i]:insertTrailPoint(100, 0.1, scale)
+    end
+end
+
 --Renders lines between each planet
 function Planet.renderLines(planetList, constant, scale)
     for i = 1, #planetList do
@@ -96,6 +161,11 @@ end
 function Planet.generateCircularOrbitPlanet(planetList, distance, theta, mass, constant)
     local positionX = distance * math.cos(theta)
     local positionY = distance * math.sin(theta)
+    local centerMass
+    local offsetX
+    local offsetY
+
+
 
     --Temporary fix to whenever a the simualtion is cleared
     if planetList[1] == nil then
