@@ -1,7 +1,5 @@
 local Planet = require("planet")
 local Timer = require("timer")
-local Utils = require("utils")
-local Gravity = require("gravity")
 local Camera = require("camera")
 local Plot = require("plot")
 
@@ -138,7 +136,6 @@ function love.draw()
     love.graphics.setColor(1,1,1 )
     love.graphics.print(string.format("%s", integrators[choice]), love.graphics.getWidth() / 2, 0)
 
-
     love.graphics.print(string.format("%.0f bodies", #planetList), 0,0)
     love.graphics.print(string.format("%.0f checks", checks), 0, 12)
     love.graphics.print(string.format("%f seconds", totalTime), 0, 24)
@@ -198,10 +195,7 @@ function love.keypressed(key, scancode, isrepeat)
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
-    if button == 1 then
-        plot.XAxisLength = plot.XAxisLength / 2
-        plot.YAxisLength = plot.YAxisLength / 2
-    end
+    
 end
 
 function love.wheelmoved(x, y)
