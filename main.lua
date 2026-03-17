@@ -1,46 +1,32 @@
-local Planet = require("planet")
-local Timer = require("timer")
-local Camera = require("camera")
-local Plot = require("plot")
+local planet = require("planet")
+local camera = require("camera")
+local planetarySystem = require("planetarySystem")
 
-local planetList = {}
+--Globals
+local integrators = {"Euler", "Verlet"} --Verlet or Euler
+local choice = 1
+local integrator = integrators[choice]
+local delta = 1/10
+local scale = 1
+local constant = 2.9591220828559e-4 --When using Au, days and solar masses
+local iterationTime = math.huge --In days
+local cameraSpeed = 1000
+local checks = 0
+local totalTime = 0
+local currentPlanet = 0
+
+local realTime = false
 local debug = false
 local showTrail = true
 local simulation = false
 local solarSystem = true
-local spawnGrid = false
-
 local centerOnPlanet = false
-local currentPlanet = 0
 local canSpawn = false
 
-local checks = 0
-local totalTime = 0
-
-local camera = Camera:new()
-local cameraSpeed = 1000
-
---Test
-local plotWidth = 400
-local plotHeight = 200
-
---Testing the plot
-local plot = Plot:new(10, love.graphics.getHeight() - plotHeight - 10, plotWidth, plotHeight, 10,50)
-local precision = 0.1
-for i = 0, plot.XAxisLength, precision do
-    plot:insertNewPoint(i, 5*math.sin(i) + 10)
-end
-
-local integrators = {"Euler", "Verlet"} --Verlet or Euler
-local choice = 1
-local delta = 1
-
-local realTime = false;
-local scale = 1
-
--- local constant = 6.6743e-11
-local constant = 2.9591220828559e-4 --When using Au, days and solar masses
-local iterationTime = math.huge --In days
+--Objects
+---@type PlanetarySystem
+local system = planetarySystem:new()
+local camera = camera:new()
 
 function love.load()
     camera:setScale(1, 1)
@@ -72,19 +58,17 @@ function love.load()
 
         for i = 1, #solarSystem do
             local newPlanet = solarSystem[i]
-            table.insert(planetList, Planet:new(newPlanet[1], newPlanet[2], newPlanet[3], newPlanet[4], newPlanet[5], newPlanet[6]))
+            table.insert(system.planets, planet:new(newPlanet[1], newPlanet[2], newPlanet[3], newPlanet[4], newPlanet[5], newPlanet[6]))
         end
         
-        camera:centerOnPosition(planetList[1].positionVec.x * scale, planetList[1].positionVec.y * scale)
+        camera:centerOnPosition(system.planets[1].positionVec.x * scale, system.planets[1].positionVec.y * scale)
 
         --Sets up initial values to use with verlet integration
-        Planet.verletIntegratorSetup(planetList, constant, delta)
+        system:verletIntegratorSetup(constant, delta)
     end
 end
 
 function love.update(dt)
-    local integrator = integrators[choice]
-
     if love.keyboard.isDown("escape") then
         love.event.quit()
     end
@@ -92,37 +76,37 @@ function love.update(dt)
     checks = 0
     -- delta = dt
     -- delta = dt / 86400
-
-    --Spawns planets throughout a certain interval
+   
+    -- Spawns planets throughout a certain interval
     if canSpawn then
-        local from = 0.1
-        local to = 0.5
-        local max = 100
+        local from = 1
+        local to = 8
+        local max = 500
         local mass = 5.1499991953912e-05
 
-        Planet.generatePlanets(from, to, mass, max, planetList, constant)
+        system:generatePlanets(from, to, mass, max, constant)
         canSpawn = not canSpawn
     end
-    
+
     if simulation then
         if totalTime < iterationTime then
             totalTime = totalTime + delta
 
             --Simulates the system
             if integrator == "Euler" then
-                Planet.eulerIntegrator(planetList, constant, delta, checks, scale)
+                system:eulerIntegrator(constant, delta, checks, scale)
             elseif integrator == "Verlet" then
-                Planet.verletIntegrator(planetList, constant, delta, checks, scale)
+                system:verletIntegrator(constant, delta, checks, scale)
             end
         end
     end
 
     --Centers the camera on the specified planet
     if centerOnPlanet then
-        local planet = planetList[currentPlanet + 1]
+        local planet = system.planets[currentPlanet + 1]
         camera:centerOnPosition(planet.positionVec.x * scale, planet.positionVec.y * scale)
     end
-    
+
     if not centerOnPlanet then
         if love.keyboard.isDown("w") then camera:move(0, -cameraSpeed * camera.scaleX * dt) end
         if love.keyboard.isDown("s") then camera:move(0, cameraSpeed * camera.scaleX * dt) end
@@ -136,66 +120,46 @@ function love.draw()
     love.graphics.setColor(1,1,1 )
     love.graphics.print(string.format("%s", integrators[choice]), love.graphics.getWidth() / 2, 0)
 
-    love.graphics.print(string.format("%.0f bodies", #planetList), 0,0)
+    love.graphics.print(string.format("%.0f bodies", #system.planets), 0,0)
     love.graphics.print(string.format("%.0f checks", checks), 0, 12)
-    love.graphics.print(string.format("%f seconds", totalTime), 0, 24)
+    love.graphics.print(string.format("%f seconds", totalTime * 86400), 0, 24)
     love.graphics.print(string.format("Camera scale: %.3f,%.3f", camera.scaleX, camera.scaleY), 0, 36)
     love.graphics.print(string.format("Camera zoom: %.3f", camera.scaleX), 0, 48)
     love.graphics.print(string.format("Camera x and y: %.3f, %.3f", camera.posX, camera.posY), 0, 60)
     love.graphics.print(string.format("Current Planet: %.0f", currentPlanet), 0, 72)
-    love.graphics.print(string.format("delta: %.2f", delta), 0, 84)
+    love.graphics.print(string.format("delta: %.8f", delta), 0, 84)
     love.graphics.print(string.format("Fps: %.2f", love.timer.getFPS()), 0, 96)
 
-    for i,planet in ipairs(planetList) do
+    for i,planet in ipairs(system.planets) do
         love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f  %.15f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z, planet.radius * scale), 0, 96 + i * 12)
     end
 
-    plot:render()
-
     camera:set()
 
-    for i = 1, #planetList do
-        local planet = planetList[i]
-        planet:render(scale)
-    end
-    if debug == true then
-        Planet.renderLines(planetList, constant, camera.scaleX)
-        print(checks)
-    end
-    if showTrail == true then
-        Planet.renderTrails(planetList, camera.scaleX)
-    end
+    system:draw(scale, camera.scaleX ,showTrail)
 
     camera:unset()
 end
 
 --Controls
 function love.keypressed(key, scancode, isrepeat)
-    if key == "c" then
-        Planet.clearAllPlanets(planetList)
-    end
-    if key == "2" then
-        if not spawnGrid then
-            spawnGrid = true
-        end
-    end
+    if key == "c" then system:clearAllPlanets() end
     if key == "n" then
-        currentPlanet = (currentPlanet + 1) % #planetList
+        currentPlanet = (currentPlanet + 1) % #system.planets
     end
 
     if key == "space" then simulation = not simulation end
     if key == "1" then debug = not debug end
     if key == "t" then showTrail = not showTrail end
     if key == "x" then centerOnPlanet = not centerOnPlanet end
-    if key == "i" then choice = (choice % 2) + 1 end
+    if key == "i" then 
+        choice = (choice % 2) + 1 
+        integrator = integrators[choice]
+    end
     if key == "l" then canSpawn = not canSpawn end
 
     if key == "up" then delta = delta + 0.1 end
     if key == "down" then delta = delta - 0.1 end
-end
-
-function love.mousepressed(x, y, button, istouch, presses)
-    
 end
 
 function love.wheelmoved(x, y)

@@ -1,8 +1,17 @@
+local Utils = require("utils")
+
+---@class Planet
+---@field color table
+---@field radius number
+---@field mass number
+---@field density number
+---@field positionVec table
+---@field velocityVec table
+---@field oldPositionVec table
+---@field accelerationVec table
+---@field pointList table
 local Planet = {}
 Planet.__index = Planet
-
-local Utils = require("utils")
-local Gravity = require("gravity")
 
 function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     local newPlanet = {}
@@ -28,90 +37,9 @@ function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     return newPlanet
 end
 
-function Planet:render(scale)
+function Planet:draw(scale)
     love.graphics.setColor(self.color.r, self.color.g, self.color.b)
-    love.graphics.ellipse("fill", self.positionVec.x * scale, self.positionVec.y * scale, self.radius * scale, self.radius * scale, 10000)
-    -- love.graphics.ellipse("fill", self.positionVec.x, self.positionVec.y, self.radius * scale, self.radius * scale, 1000)
-end
-
---Iterates over a planetList and advances each planet's position using Euler integration
-function Planet.eulerIntegrator(planetList, constant, delta, checks, scale)
-    for i = 1, #planetList do
-        for j = 1, #planetList do 
-            if j ~= i then
-                local planet1 = planetList[i]
-                local planet2 = planetList[j]
-                local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-                Gravity.computeVelocity(planet1, planet2, delta, force)
-                checks = checks + 1
-            end
-        end
-    end
-    
-    for i = 1, #planetList do
-        Gravity.advancePosition(planetList[i], delta)
-        planetList[i]:insertTrailPoint(100, 0.1, scale)
-    end
-end
-
---The following method must be used at the start of the simulation so that Verlet integration will work
-function Planet.verletIntegratorSetup(planetList, constant, delta)
-    for i = 1, #planetList do
-        for j = 1, #planetList do
-            if j ~= i then
-                local planet1 = planetList[i]
-                local planet2 = planetList[j]
-
-                local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-                Gravity.computeVelocity(planet1, planet2, delta, force)
-            end 
-        end
-    end
-
-    for i = 1, #planetList do
-        Gravity.initialVerletSetup(planetList[i], delta)
-    end
-end
-
---Iterates over a planetList and advances each planet's position using Verlet integration
-function Planet.verletIntegrator(planetList, constant, delta, checks, scale)
-    for i = 1, #planetList do
-        planetList[i].accelerationVec.x = 0
-        planetList[i].accelerationVec.y = 0
-        planetList[i].accelerationVec.z = 0
-    end
-
-    for i = 1, #planetList do
-        for j = 1, #planetList do
-            if j ~= i then
-                local planet1 = planetList[i]
-                local planet2 = planetList[j]
-                local force = Gravity.computeGravitationalForce(planet1, planet2, constant)
-                Gravity.computeAcceleration(planet1, planet2, delta, force)
-                checks = checks + 1
-            end
-        end
-    end
-
-    for i = 1, #planetList do
-        Gravity.advanceVerlet(planetList[i], delta)
-        planetList[i]:insertTrailPoint(100, 0.1, scale)
-    end
-end
-
---Renders lines between each planet
-function Planet.renderLines(planetList, constant, scale)
-    for i = 1, #planetList do
-        for j = 1, #planetList do
-            if j ~= i then
-                local planet1, planet2 = planetList[i], planetList[j]
-
-                love.graphics.setColor(planet1.color.r, planet1.color.g, planet1.color.b)
-                love.graphics.setLineWidth(1 * scale)
-                love.graphics.line(planet1.positionVec.x, planet1.positionVec.y, planet2.positionVec.x, planet2.positionVec.y)
-            end
-        end
-    end
+    love.graphics.ellipse("fill", self.positionVec.x * scale, self.positionVec.y * scale, self.radius * scale * 100, self.radius * scale * 100, 100)
 end
 
 function Planet:insertTrailPoint(maxPoints, interval, scale)
@@ -135,20 +63,6 @@ function Planet:insertTrailPoint(maxPoints, interval, scale)
     end
 end
 
-function Planet.renderTrails(planetList, scale)
-    love.graphics.setLineWidth(1 * scale)
-    for i,planet in ipairs(planetList) do
-        love.graphics.setColor(planet.color.r, planet.color.g, planet.color.b)
-        love.graphics.line(planet.pointList)
-    end
-end
-
-function Planet.clearAllPlanets(planetList)
-    for i = 1, #planetList do
-        planetList[i] = nil
-    end
-end
-
 function Planet:printInfo()
     print(string.format("Color: %d, %d, %d", self.color.r, self.color.g, self.color.b))
     print(string.format("Radius: %d", self.radius))
@@ -157,25 +71,30 @@ function Planet:printInfo()
     print(string.format("Position: %d, %d, %d", self.positionVec.x, self.positionVec.y, self.positionVec.z))
 end
 
---Extend to 3D later
-function Planet.generateCircularOrbitPlanet(planetList, distance, theta, mass, constant)
-    local positionX = distance * math.cos(theta)
-    local positionY = distance * math.sin(theta)
+---Generates a planet with a Velocity vector such that it has a circular orbit
+---@param distance number Distance from the sun
+---@param angle number Angle at which to generate the new planet relative to the sun
+---@param mass number Mass of the new planet
+---@param constant number Gravitational constant
+---@param sunPosition table Position vectors of the sun
+---@param sunMass number Mass of the sun
+---@return table
+function Planet.generateCircularOrbitPlanet(distance, angle, mass, constant, sunPosition, sunMass)
+    local positionX = distance * math.cos(angle)
+    local positionY = distance * math.sin(angle)
     local centerMass
     local offsetX
     local offsetY
 
-
-
-    --Temporary fix to whenever a the simualtion is cleared
-    if planetList[1] == nil then
+    --Temporary fix for whenever a the simualtion is cleared
+    if sunPosition == nil or sunMass == nil then
         centerMass = 1
         offsetX = 0
         offsetY = 0
     else
-        offsetX = planetList[1].positionVec.x
-        offsetY = planetList[1].positionVec.y
-        centerMass = planetList[1].mass
+        offsetX = sunPosition.x
+        offsetY = sunPosition.y
+        centerMass = sunMass
     end
 
     local velocity = math.sqrt(constant * centerMass / distance)
@@ -184,24 +103,7 @@ function Planet.generateCircularOrbitPlanet(planetList, distance, theta, mass, c
     local velocityX = -velocity * (positionY / distance)
     local velocityY = velocity * (positionX / distance)
 
-    table.insert(planetList, Planet:new({r=1,g=1,b=1}, nil, mass, 1.6379, {x=positionX + offsetX, y=positionY + offsetY,z=0},{x=velocityX,y=velocityY,z=0}))
-end
-
-function Planet.generatePlanets(minimum, maximum, mass, numberOfPlanets, planetList, constant)
-    local angle = 0;
-    local distance
-    
-    for i = 1, numberOfPlanets do
-        distance = minimum + (maximum - minimum) * love.math.random()
-
-        Planet.generateCircularOrbitPlanet(planetList, distance, angle, mass, constant)
-        angle = angle + 2 * math.pi / numberOfPlanets
-
-        -- distance = distance - distance / max
-        -- distance = math.sin(6 * angle) + 2
-        -- distance = angle + 6 * 6
-        -- distance = 1 * math.sin(2 * (angle * 5)) + 6
-    end
+    return Planet:new({r=1,g=1,b=1}, nil, mass, 1.6379, {x=positionX + offsetX, y=positionY + offsetY,z=0},{x=velocityX,y=velocityY,z=0})
 end
 
 return Planet
