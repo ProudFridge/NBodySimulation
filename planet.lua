@@ -37,9 +37,10 @@ function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     return newPlanet
 end
 
-function Planet:draw(scale)
+function Planet:draw(scale, camera)
     love.graphics.setColor(self.color.r, self.color.g, self.color.b)
-    love.graphics.ellipse("fill", self.positionVec.x * scale, self.positionVec.y * scale, self.radius * scale * 100, self.radius * scale * 100, 100)
+    local newVector = camera:rotateAll({x=self.positionVec.x,y=self.positionVec.y,z=self.positionVec.z})
+    love.graphics.ellipse("fill", newVector.x * scale, newVector.y * scale, self.radius * scale * 100, self.radius * scale * 100, 100)
 end
 
 function Planet:insertTrailPoint(maxPoints, interval, scale)

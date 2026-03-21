@@ -1,5 +1,5 @@
 local planet = require("planet")
-local camera = require("camera")
+local Camera = require("camera")
 local planetarySystem = require("planetarySystem")
 
 --Globals
@@ -23,10 +23,13 @@ local solarSystem = true
 local centerOnPlanet = false
 local canSpawn = false
 
+local points = {{x = 1, y = 1, z = 1}, {x = 2, y = 3, z = 5}}
+
+
 --Objects
 ---@type PlanetarySystem
 local system = planetarySystem:new()
-local camera = camera:new()
+local camera = Camera:new(0,0,0)
 
 function love.load()
     camera:setScale(1, 1)
@@ -73,6 +76,8 @@ function love.update(dt)
         love.event.quit()
     end
 
+    camera.rotX = camera.rotX + dt * 0.2
+
     checks = 0
     -- delta = dt
     -- delta = dt / 86400
@@ -105,9 +110,7 @@ function love.update(dt)
     if centerOnPlanet then
         local planet = system.planets[currentPlanet + 1]
         camera:centerOnPosition(planet.positionVec.x * scale, planet.positionVec.y * scale)
-    end
-
-    if not centerOnPlanet then
+    elseif not centerOnPlanet then
         if love.keyboard.isDown("w") then camera:move(0, -cameraSpeed * camera.scaleX * dt) end
         if love.keyboard.isDown("s") then camera:move(0, cameraSpeed * camera.scaleX * dt) end
         if love.keyboard.isDown("d") then camera:move(cameraSpeed * camera.scaleX * dt, 0) end
@@ -136,7 +139,13 @@ function love.draw()
 
     camera:set()
 
-    system:draw(scale, camera.scaleX ,showTrail)
+    system:draw(scale, camera.scaleX ,showTrail, camera)
+
+    -- for i = 1, #points do
+    --     local newPosition = camera:rotateAll(points[i])
+    --     love.graphics.ellipse("fill", newPosition.x, newPosition.y, 0.5, 0.5)
+    -- end
+
 
     camera:unset()
 end

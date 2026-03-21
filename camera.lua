@@ -5,7 +5,13 @@ Camera.__index = Camera
 Camera class taken from https://ebens.me/posts/cameras-in-love2d-part-1-the-basics
 ]]
 
-function Camera:new()
+---@class Camera
+---Camera constructor
+---@param rotX number
+---@param rotY number
+---@param rotZ number
+---@return table
+function Camera:new(rotX, rotY, rotZ)
     local newCamera = {}
     setmetatable(newCamera, Camera)
 
@@ -15,6 +21,10 @@ function Camera:new()
     newCamera.scaleY = 1
     newCamera.rotation = 0
     
+    newCamera.rotX = rotX
+    newCamera.rotY = rotY
+    newCamera.rotZ = rotZ
+
     return newCamera
 end
 
@@ -85,6 +95,59 @@ function Camera:zoom(zx, zy)
 
     local offsetX, offsetY = newCenterX - oldCenterX, newCenterY - oldCenterY
     self:move(-offsetX, -offsetY)
+end
+
+---Rotates a point in the x axis
+---@param inputVec table 3D vector representing the point
+---@return table outputVec Rotated position vector
+function Camera:rotateX(inputVec)
+    local y = inputVec.y
+    local z = inputVec.z
+
+    local cos = math.cos(self.rotX)
+    local sin = math.sin(self.rotX)
+
+    local newY = y * cos - z * sin
+    local newZ = y * sin + z * cos
+
+    return {x=inputVec.x,y=newY,z=newZ}
+end
+
+---Rotates a point in the y axis
+---@param inputVec table 3D vector representing the point
+---@return table outputVec Rotated position vector
+function Camera:rotateY(inputVec)
+    local x = inputVec.x
+    local z = inputVec.z
+    local cos = math.cos(self.rotY)
+    local sin = math.sin(self.rotY)
+
+    local newX = x * cos + z * sin
+    local newZ = -x * sin + z * cos
+
+    return {x=newX,y=inputVec.y,z=newZ}
+end
+
+---Rotates a point in the z axis
+---@param inputVec table 3D vector representing the point
+---@return table outputVec Rotated position vector
+function Camera:rotateZ(inputVec)
+    local x = inputVec.x
+    local y = inputVec.y
+    local cos = math.cos(self.rotZ)
+    local sin = math.sin(self.rotZ)
+
+    local newX = x * cos - y * sin
+    local newY = x * sin + y * cos
+
+    return {x=newX,y=newY,z=inputVec.z}
+end
+
+---Rotates a point in all axis
+---@param inputVec table 3D vector representing the point
+---@return table outputVec Rotated position vector
+function Camera:rotateAll(inputVec)
+    return self:rotateZ(self:rotateY(self:rotateX(inputVec)))
 end
 
 return Camera

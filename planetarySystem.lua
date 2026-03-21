@@ -20,10 +20,10 @@ end
 ---@param scale number Scale the entire systeems values while keeping the graphics consistent
 ---@param cameraScale number Scales the trails appropriatly when renderTrail is true
 ---@param renderTrail boolean Whether or not the planet's trails should be rendered
-function PlanetarySystem:draw(scale, cameraScale, renderTrail)
+function PlanetarySystem:draw(scale, cameraScale, renderTrail, camera)
     for i = 1, #self.planets do
             local planet = self.planets[i]
-            planet:draw(scale)
+            planet:draw(scale, camera)
         end
     if renderTrail then
         love.graphics.setLineWidth(1 * cameraScale)
@@ -131,7 +131,7 @@ function PlanetarySystem:generatePlanets(minimum, maximum, mass, numberOfPlanets
         distance = minimum + (maximum - minimum) * love.math.random()
         -- distance = 10 * math.cos( 8 * angle) + 15
 
-        table.insert(self.planets, planet.generateCircularOrbitPlanet(distance, angle, mass, constant))
+        table.insert(self.planets, planet.generateCircularOrbitPlanet(distance, angle, mass, constant, nil, nil))
         angle = angle + 2 * math.pi / numberOfPlanets
     end
 end
