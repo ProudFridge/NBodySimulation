@@ -31,9 +31,6 @@ function PlanetarySystem:draw(renderTrail, camera)
                 local newVec = camera:rotateAll(pointList[i])
                 table.insert(newPoints, newVec.x)
                 table.insert(newPoints, newVec.y)
-
-                -- table.insert(newPoints, pointList[i].x)
-                -- table.insert(newPoints, pointList[i].y)
             end
             return newPoints
         end
