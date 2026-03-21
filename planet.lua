@@ -32,35 +32,32 @@ function Planet:new(color, radius, mass, density, positionVec, velocityVec)
 
     newPlanet.velocityVec = velocityVec
     newPlanet.accelerationVec = {x = 0, y = 0, z = 0}
-    newPlanet.pointList = {newPlanet.positionVec.x, newPlanet.positionVec.y, newPlanet.positionVec.x, newPlanet.positionVec.y}
+    newPlanet.pointList = {{x=newPlanet.positionVec.x, y=newPlanet.positionVec.y, z=newPlanet.positionVec.z}, {x=newPlanet.positionVec.x, y=newPlanet.positionVec.y, z=newPlanet.positionVec.z}}
 
     return newPlanet
 end
 
-function Planet:draw(scale, camera)
+function Planet:draw(camera)
     love.graphics.setColor(self.color.r, self.color.g, self.color.b)
     local newVector = camera:rotateAll({x=self.positionVec.x,y=self.positionVec.y,z=self.positionVec.z})
-    love.graphics.ellipse("fill", newVector.x * scale, newVector.y * scale, self.radius * scale * 100, self.radius * scale * 100, 100)
+    love.graphics.ellipse("fill", newVector.x, newVector.y, self.radius * 100, self.radius * 100, 100)
 end
 
-function Planet:insertTrailPoint(maxPoints, interval, scale)
-    -- interval = interval or 0
+function Planet:insertTrailPoint(maxPoints, interval)
     --Removes points when they reach a certain threshold
     if #self.pointList > maxPoints then
-        table.remove(self.pointList, 1)
         table.remove(self.pointList, 1)
     end
     
     --Calculates the distance between the last inserted point and the current planet's position
-    local comX = self.pointList[#self.pointList-1]
-    local comY = self.pointList[#self.pointList]
+    local lastPosition = self.pointList[#self.pointList]
 
-    local distanceX, distanceY = Utils.calcVector(comX, comY, 0, self.positionVec.x, self.positionVec.y, 0)
-    local magnitude = Utils.calcMagnitude(distanceX, distanceY, 0)
+    local distanceX, distanceY, distanceZ = Utils.calcVector(lastPosition.x, lastPosition.y, lastPosition.z, self.positionVec.x, self.positionVec.y, self.positionVec.z)
+    local magnitude = Utils.calcMagnitude(distanceX, distanceY, distanceZ)
 
+    -- print(magnitude)
     if magnitude >= interval then
-        table.insert(self.pointList, self.positionVec.x * scale)
-        table.insert(self.pointList, self.positionVec.y * scale)
+        table.insert(self.pointList, {x=self.positionVec.x, y=self.positionVec.y, z=self.positionVec.z})
     end
 end
 

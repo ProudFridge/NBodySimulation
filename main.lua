@@ -7,7 +7,6 @@ local integrators = {"Euler", "Verlet"} --Verlet or Euler
 local choice = 1
 local integrator = integrators[choice]
 local delta = 1/10
-local scale = 1
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
 local iterationTime = math.huge --In days
 local cameraSpeed = 1000
@@ -22,9 +21,6 @@ local simulation = false
 local solarSystem = true
 local centerOnPlanet = false
 local canSpawn = false
-
-local points = {{x = 1, y = 1, z = 1}, {x = 2, y = 3, z = 5}}
-
 
 --Objects
 ---@type PlanetarySystem
@@ -64,7 +60,9 @@ function love.load()
             table.insert(system.planets, planet:new(newPlanet[1], newPlanet[2], newPlanet[3], newPlanet[4], newPlanet[5], newPlanet[6]))
         end
         
-        camera:centerOnPosition(system.planets[1].positionVec.x * scale, system.planets[1].positionVec.y * scale)
+        local newCenter = camera:rotateAll(system.planets[1].positionVec)
+        -- camera:centerOnPosition(system.planets[1].positionVec.x, system.planets[1].positionVec.y)
+        camera:centerOnPosition(newCenter.x, newCenter.y)
 
         --Sets up initial values to use with verlet integration
         system:verletIntegratorSetup(constant, delta)
@@ -76,12 +74,19 @@ function love.update(dt)
         love.event.quit()
     end
 
-    camera.rotX = camera.rotX + dt * 0.2
-
     checks = 0
     -- delta = dt
     -- delta = dt / 86400
    
+    if love.keyboard.isDown("up") then camera.rotX = camera.rotX + dt
+    elseif love.keyboard.isDown("down") then camera.rotX = camera.rotX - dt        
+    end
+
+    if love.keyboard.isDown("left") then camera.rotY = camera.rotY + dt
+    elseif love.keyboard.isDown("right") then camera.rotY = camera.rotY - dt        
+    end
+
+
     -- Spawns planets throughout a certain interval
     if canSpawn then
         local from = 1
@@ -94,14 +99,17 @@ function love.update(dt)
     end
 
     if simulation then
+        -- camera.rotX = camera.rotX + dt * 0.2
+        -- camera.rotY = camera.rotY + dt * 0.2
+        -- camera.rotZ = camera.rotZ + dt * 0.2
         if totalTime < iterationTime then
             totalTime = totalTime + delta
 
             --Simulates the system
             if integrator == "Euler" then
-                system:eulerIntegrator(constant, delta, checks, scale)
+                system:eulerIntegrator(constant, delta, checks)
             elseif integrator == "Verlet" then
-                system:verletIntegrator(constant, delta, checks, scale)
+                system:verletIntegrator(constant, delta, checks)
             end
         end
     end
@@ -109,7 +117,8 @@ function love.update(dt)
     --Centers the camera on the specified planet
     if centerOnPlanet then
         local planet = system.planets[currentPlanet + 1]
-        camera:centerOnPosition(planet.positionVec.x * scale, planet.positionVec.y * scale)
+        local newCenter = camera:rotateAll(planet.positionVec)
+        camera:centerOnPosition(newCenter.x, newCenter.y)
     elseif not centerOnPlanet then
         if love.keyboard.isDown("w") then camera:move(0, -cameraSpeed * camera.scaleX * dt) end
         if love.keyboard.isDown("s") then camera:move(0, cameraSpeed * camera.scaleX * dt) end
@@ -129,23 +138,19 @@ function love.draw()
     love.graphics.print(string.format("Camera scale: %.3f,%.3f", camera.scaleX, camera.scaleY), 0, 36)
     love.graphics.print(string.format("Camera zoom: %.3f", camera.scaleX), 0, 48)
     love.graphics.print(string.format("Camera x and y: %.3f, %.3f", camera.posX, camera.posY), 0, 60)
-    love.graphics.print(string.format("Current Planet: %.0f", currentPlanet), 0, 72)
-    love.graphics.print(string.format("delta: %.8f", delta), 0, 84)
-    love.graphics.print(string.format("Fps: %.2f", love.timer.getFPS()), 0, 96)
+    love.graphics.print(string.format("Camera rotation: %.3f, %.3f, %.3f", camera.rotX, camera.rotY, camera.rotZ), 0, 72)
+    love.graphics.print(string.format("Current Planet: %.0f", currentPlanet), 0, 84)
+    love.graphics.print(string.format("delta: %.8f", delta), 0, 96)
+    love.graphics.print(string.format("Fps: %.2f", love.timer.getFPS()), 0, 108)
+    love.graphics.print(string.format("ShowTrail: %s", showTrail), 0, 120)
 
     for i,planet in ipairs(system.planets) do
-        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f  %.15f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z, planet.radius * scale), 0, 96 + i * 12)
+        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z), 0, 132 + i * 12)
     end
 
     camera:set()
 
-    system:draw(scale, camera.scaleX ,showTrail, camera)
-
-    -- for i = 1, #points do
-    --     local newPosition = camera:rotateAll(points[i])
-    --     love.graphics.ellipse("fill", newPosition.x, newPosition.y, 0.5, 0.5)
-    -- end
-
+    system:draw(showTrail, camera)
 
     camera:unset()
 end
@@ -166,9 +171,6 @@ function love.keypressed(key, scancode, isrepeat)
         integrator = integrators[choice]
     end
     if key == "l" then canSpawn = not canSpawn end
-
-    if key == "up" then delta = delta + 0.1 end
-    if key == "down" then delta = delta - 0.1 end
 end
 
 function love.wheelmoved(x, y)

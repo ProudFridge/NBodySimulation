@@ -17,20 +17,36 @@ function PlanetarySystem:new()
 end
 
 ---Draws all the planets in the system
----@param scale number Scale the entire systeems values while keeping the graphics consistent
----@param cameraScale number Scales the trails appropriatly when renderTrail is true
 ---@param renderTrail boolean Whether or not the planet's trails should be rendered
-function PlanetarySystem:draw(scale, cameraScale, renderTrail, camera)
+---@param camera Camera Camera object
+function PlanetarySystem:draw(renderTrail, camera)
     for i = 1, #self.planets do
             local planet = self.planets[i]
-            planet:draw(scale, camera)
+            planet:draw(camera)
         end
     if renderTrail then
-        love.graphics.setLineWidth(1 * cameraScale)
+        local convert = function (pointList)
+            local newPoints = {}
+            for i = 1, #pointList do
+                local newVec = camera:rotateAll(pointList[i])
+                table.insert(newPoints, newVec.x)
+                table.insert(newPoints, newVec.y)
+
+                -- table.insert(newPoints, pointList[i].x)
+                -- table.insert(newPoints, pointList[i].y)
+            end
+            return newPoints
+        end
+
+        -- love.graphics.setLineWidth(camera.scaleX)
+        love.graphics.setLineWidth(camera.scaleX)
+        love.graphics.setColor({1,1,1,1})
         for i = 1, #self.planets do
             local planet = self.planets[i]
             love.graphics.setColor(planet.color.r, planet.color.g, planet.color.b)
-            love.graphics.line(planet.pointList)
+            local newPointList = convert(planet.pointList)
+
+            love.graphics.line(newPointList)
         end
     end
 end
@@ -40,7 +56,7 @@ end
 ---@param delta number
 ---@param checks number
 ---@param scale number
-function PlanetarySystem:eulerIntegrator(constant, delta, checks, scale)
+function PlanetarySystem:eulerIntegrator(constant, delta, checks)
     for i = 1, #self.planets do
         for j = 1, #self.planets do 
             if j ~= i then
@@ -55,7 +71,7 @@ function PlanetarySystem:eulerIntegrator(constant, delta, checks, scale)
 
     for i = 1, #self.planets do
         gravity.advancePosition(self.planets[i], delta)
-        self.planets[i]:insertTrailPoint(100, 0.1, scale)
+        self.planets[i]:insertTrailPoint(100, 0.1)
     end
 end
 
@@ -85,7 +101,7 @@ end
 ---@param delta number
 ---@param checks number
 ---@param scale number
-function PlanetarySystem:verletIntegrator(constant, delta, checks, scale)
+function PlanetarySystem:verletIntegrator(constant, delta, checks)
     for i = 1, #self.planets do
         self.planets[i].accelerationVec.x = 0
         self.planets[i].accelerationVec.y = 0
@@ -106,7 +122,7 @@ function PlanetarySystem:verletIntegrator(constant, delta, checks, scale)
 
     for i = 1, #self.planets do
         gravity.advanceVerlet(self.planets[i], delta)
-        self.planets[i]:insertTrailPoint(100, 0.1, scale)
+        self.planets[i]:insertTrailPoint(100, 0.1)
     end
 end
 
