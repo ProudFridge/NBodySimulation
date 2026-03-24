@@ -1,3 +1,4 @@
+---@class Camera
 local Camera = {}
 Camera.__index = Camera
 
@@ -5,7 +6,6 @@ Camera.__index = Camera
 Camera class taken from https://ebens.me/posts/cameras-in-love2d-part-1-the-basics
 ]]
 
----@class Camera
 ---Camera constructor
 ---@param rotX number
 ---@param rotY number

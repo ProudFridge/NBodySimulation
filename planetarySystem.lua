@@ -1,6 +1,5 @@
 local gravity = require("gravity")
 local planet = require("planet")
-local utils = require("utils")
 
 ---@class PlanetarySystem
 ---@field planets Planet
@@ -160,10 +159,10 @@ function PlanetarySystem:computeTotalEnergy(constant)
             if i ~= j then
                 local planetO = self.planets[i]
                 local planetE = self.planets[j]
-                local distanceVec = utils.calcVectorV(planetO.positionVec, planetE.positionVec)
-                local distance = utils.calcMagnitudeV(distanceVec)
+                local distanceVec = planetO.positionVec:substract(planetE.positionVec)
+                local distance = distanceVec:magnitude()
 
-                local kEnergy = 0.5 * planetO.mass * utils.calcMagnitudeV(planetO.velocityVec) ^ 2
+                local kEnergy = 0.5 * planetO.mass * planetO.velocityVec:magnitude() ^ 2
                 local gEnergy = -1 * constant * planetO.mass * planetE.mass / distance
                 totalEnergy = totalEnergy + kEnergy + gEnergy
             end

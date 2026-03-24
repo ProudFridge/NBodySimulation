@@ -1,18 +1,26 @@
-local Utils = require("utils")
+local Vector3D = require("vector3d")
 
 ---@class Planet
 ---@field color table
 ---@field radius number
 ---@field mass number
 ---@field density number
----@field positionVec table
----@field velocityVec table
----@field oldPositionVec table
----@field accelerationVec table
+---@field positionVec Vector3D
+---@field velocityVec Vector3D
+---@field oldPositionVec Vector3D
+---@field accelerationVec Vector3D
 ---@field pointList table
 local Planet = {}
 Planet.__index = Planet
 
+---Planet constructor
+---@param color table
+---@param radius number
+---@param mass number
+---@param density number
+---@param positionVec Vector3D
+---@param velocityVec Vector3D
+---@return table
 function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     local newPlanet = {}
     setmetatable(newPlanet, Planet)
@@ -25,13 +33,14 @@ function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     newPlanet.positionVec = positionVec
 
     --Deep copy of the positionVec
-    newPlanet.oldPositionVec = {x = 0, y = 0, z = 0}
-    newPlanet.oldPositionVec.x = newPlanet.positionVec.x --Needed when using verlet integration
-    newPlanet.oldPositionVec.y = newPlanet.positionVec.y --Needed when using verlet integration
-    newPlanet.oldPositionVec.z = newPlanet.positionVec.z --Needed when using verlet integration
+    -- newPlanet.oldPositionVec = {x = 0, y = 0, z = 0}
+    -- newPlanet.oldPositionVec.x = newPlanet.positionVec.x --Needed when using verlet integration
+    -- newPlanet.oldPositionVec.y = newPlanet.positionVec.y --Needed when using verlet integration
+    -- newPlanet.oldPositionVec.z = newPlanet.positionVec.z --Needed when using verlet integration
 
+    newPlanet.oldPositionVec = Vector3D:new(positionVec.x, positionVec.y, positionVec.z)
     newPlanet.velocityVec = velocityVec
-    newPlanet.accelerationVec = {x = 0, y = 0, z = 0}
+    newPlanet.accelerationVec = Vector3D:new(0, 0, 0)
     newPlanet.pointList = {{x=newPlanet.positionVec.x, y=newPlanet.positionVec.y, z=newPlanet.positionVec.z}, {x=newPlanet.positionVec.x, y=newPlanet.positionVec.y, z=newPlanet.positionVec.z}}
 
     return newPlanet
@@ -51,9 +60,10 @@ function Planet:insertTrailPoint(maxPoints, interval)
     
     --Calculates the distance between the last inserted point and the current planet's position
     local lastPosition = self.pointList[#self.pointList]
+    local lastPositionVec = Vector3D:new(lastPosition.x, lastPosition.y, lastPosition.z)
 
-    local distanceX, distanceY, distanceZ = Utils.calcVector(lastPosition.x, lastPosition.y, lastPosition.z, self.positionVec.x, self.positionVec.y, self.positionVec.z)
-    local magnitude = Utils.calcMagnitude(distanceX, distanceY, distanceZ)
+    local distanceVec = lastPositionVec:substract(self.positionVec)
+    local magnitude = distanceVec:magnitude()
 
     -- print(magnitude)
     if magnitude >= interval then
