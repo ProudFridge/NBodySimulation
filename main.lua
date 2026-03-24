@@ -1,6 +1,7 @@
 local planet = require("planet")
 local Camera = require("camera")
 local planetarySystem = require("planetarySystem")
+local utils           = require("utils")
 
 --Globals
 local integrators = {"Euler", "Verlet"} --Verlet or Euler
@@ -8,11 +9,19 @@ local choice = 1
 local integrator = integrators[choice]
 local delta = 1/10
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
-local iterationTime = math.huge --In days
+-- local iterationTime = math.huge --In days
+local iterationTime = 100--In days
 local cameraSpeed = 1000
 local checks = 0
 local totalTime = 0
 local currentPlanet = 0
+local totalEnergy
+local oldMousePositionX
+local oldMousePositionY
+local mousePositionX = love.mouse.getX()
+local mousePositionY = love.mouse.getY()
+local tempX = love.mouse.getX()
+local tempY = love.mouse.getY()
 
 local realTime = false
 local debug = false
@@ -28,6 +37,8 @@ local system = planetarySystem:new()
 local camera = Camera:new(0,0,0)
 
 function love.load()
+    -- os.execute("python plot.py")
+
     camera:setScale(1, 1)
     camera:scale(100)
 
@@ -61,7 +72,6 @@ function love.load()
         end
         
         local newCenter = camera:rotateAll(system.planets[1].positionVec)
-        -- camera:centerOnPosition(system.planets[1].positionVec.x, system.planets[1].positionVec.y)
         camera:centerOnPosition(newCenter.x, newCenter.y)
 
         --Sets up initial values to use with verlet integration
@@ -70,8 +80,24 @@ function love.load()
 end
 
 function love.update(dt)
-    if love.keyboard.isDown("escape") then
-        love.event.quit()
+    if love.keyboard.isDown("escape") then love.event.quit() end
+
+    ---Rotates the system by dragging the mouse
+    tempX = mousePositionX
+    tempY = mousePositionY
+    
+    mousePositionX = love.mouse.getX()
+    mousePositionY = love.mouse.getY()
+
+    oldMousePositionX = tempX
+    oldMousePositionY = tempY
+
+    if love.mouse.isDown(1) then
+        local newAngleY =  (mousePositionX - oldMousePositionX) * 1/100
+        local newAngleX = (mousePositionY - oldMousePositionY) * 1/100
+
+        camera.rotX = camera.rotX + newAngleX
+        camera.rotY = camera.rotY + newAngleY
     end
 
     checks = 0
@@ -83,9 +109,8 @@ function love.update(dt)
     end
 
     if love.keyboard.isDown("left") then camera.rotY = camera.rotY + dt
-    elseif love.keyboard.isDown("right") then camera.rotY = camera.rotY - dt        
+    elseif love.keyboard.isDown("right") then camera.rotY = camera.rotY - dt   
     end
-
 
     -- Spawns planets throughout a certain interval
     if canSpawn then
@@ -99,11 +124,12 @@ function love.update(dt)
     end
 
     if simulation then
-        -- camera.rotX = camera.rotX + dt * 0.2
-        -- camera.rotY = camera.rotY + dt * 0.2
-        -- camera.rotZ = camera.rotZ + dt * 0.2
         if totalTime < iterationTime then
+            if totalTime + delta > iterationTime then
+                delta = iterationTime - totalTime
+            end
             totalTime = totalTime + delta
+            totalEnergy = 0
 
             --Simulates the system
             if integrator == "Euler" then
@@ -111,6 +137,23 @@ function love.update(dt)
             elseif integrator == "Verlet" then
                 system:verletIntegrator(constant, delta, checks)
             end
+
+            --Compute the total energy of the system each tick
+            for i = 1, #system.planets do
+                for j = 1, #system.planets do
+                    if i ~= j then
+                        local planetO = system.planets[i]
+                        local planetE = system.planets[j]
+                        local distanceX, distanceY, distanceZ = utils.calcVector(planetE.positionVec.x, planetE.positionVec.y, planetE.positionVec.z, planetO.positionVec.x, planetO.positionVec.y, planetO.positionVec.z)
+                        local distance = utils.calcMagnitude(distanceX, distanceY, distanceZ)
+
+                        local kEnergy = 0.5 * planetO.mass * utils.calcMagnitude(planetO.velocityVec.x, planetO.velocityVec.y, planetO.velocityVec.z) ^ 2
+                        local gEnergy = -1 * constant * planetO.mass * planetE.mass / distance
+                        totalEnergy = totalEnergy + kEnergy + gEnergy
+                    end
+                end
+            end
+            print(totalEnergy)
         end
     end
 
@@ -134,7 +177,7 @@ function love.draw()
 
     love.graphics.print(string.format("%.0f bodies", #system.planets), 0,0)
     love.graphics.print(string.format("%.0f checks", checks), 0, 12)
-    love.graphics.print(string.format("%f seconds", totalTime * 86400), 0, 24)
+    love.graphics.print(string.format("%f days", totalTime), 0, 24)
     love.graphics.print(string.format("Camera zoom: %.3f,%.3f", camera.scaleX, camera.scaleY), 0, 36)
     love.graphics.print(string.format("Camera x and y: %.3f, %.3f", camera.posX, camera.posY), 0, 48)
     love.graphics.print(string.format("Camera rotation: %.3f, %.3f, %.3f", camera.rotX, camera.rotY, camera.rotZ), 0, 60)
@@ -148,9 +191,7 @@ function love.draw()
     end
 
     camera:set()
-
     system:draw(showTrail, camera)
-
     camera:unset()
 end
 
