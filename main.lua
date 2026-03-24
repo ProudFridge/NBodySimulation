@@ -9,13 +9,14 @@ local choice = 1
 local integrator = integrators[choice]
 local delta = 1/10
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
--- local iterationTime = math.huge --In days
-local iterationTime = 100--In days
+local iterationTime = math.huge --In days
+-- local iterationTime = 10s0--In days
 local cameraSpeed = 1000
 local checks = 0
 local totalTime = 0
 local currentPlanet = 0
-local totalEnergy
+local totalEnergy = 0
+local initialEnergy = 0
 local oldMousePositionX
 local oldMousePositionY
 local mousePositionX = love.mouse.getX()
@@ -76,6 +77,7 @@ function love.load()
 
         --Sets up initial values to use with verlet integration
         system:verletIntegratorSetup(constant, delta)
+        initialEnergy = system:computeTotalEnergy(constant)
     end
 end
 
@@ -129,7 +131,6 @@ function love.update(dt)
                 delta = iterationTime - totalTime
             end
             totalTime = totalTime + delta
-            totalEnergy = 0
 
             --Simulates the system
             if integrator == "Euler" then
@@ -138,22 +139,10 @@ function love.update(dt)
                 system:verletIntegrator(constant, delta, checks)
             end
 
-            --Compute the total energy of the system each tick
-            for i = 1, #system.planets do
-                for j = 1, #system.planets do
-                    if i ~= j then
-                        local planetO = system.planets[i]
-                        local planetE = system.planets[j]
-                        local distanceX, distanceY, distanceZ = utils.calcVector(planetE.positionVec.x, planetE.positionVec.y, planetE.positionVec.z, planetO.positionVec.x, planetO.positionVec.y, planetO.positionVec.z)
-                        local distance = utils.calcMagnitude(distanceX, distanceY, distanceZ)
-
-                        local kEnergy = 0.5 * planetO.mass * utils.calcMagnitude(planetO.velocityVec.x, planetO.velocityVec.y, planetO.velocityVec.z) ^ 2
-                        local gEnergy = -1 * constant * planetO.mass * planetE.mass / distance
-                        totalEnergy = totalEnergy + kEnergy + gEnergy
-                    end
-                end
-            end
-            print(totalEnergy)
+            -- Compute the total energy of the system each tick
+            totalEnergy = 0
+            totalEnergy = totalEnergy + system:computeTotalEnergy(constant)
+            print((totalEnergy - initialEnergy) / initialEnergy)
         end
     end
 

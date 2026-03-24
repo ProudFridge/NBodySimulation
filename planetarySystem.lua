@@ -1,5 +1,6 @@
 local gravity = require("gravity")
 local planet = require("planet")
+local utils = require("utils")
 
 ---@class PlanetarySystem
 ---@field planets Planet
@@ -147,6 +148,28 @@ function PlanetarySystem:generatePlanets(minimum, maximum, mass, numberOfPlanets
         table.insert(self.planets, planet.generateCircularOrbitPlanet(distance, angle, mass, constant, nil, nil))
         angle = angle + 2 * math.pi / numberOfPlanets
     end
+end
+
+---Computes the total energy of the planetary system
+---@param constant number
+---@return integer totalEnergy
+function PlanetarySystem:computeTotalEnergy(constant)
+    local totalEnergy = 0
+    for i = 1, #self.planets do
+        for j = 1, #self.planets do
+            if i ~= j then
+                local planetO = self.planets[i]
+                local planetE = self.planets[j]
+                local distanceVec = utils.calcVectorV(planetO.positionVec, planetE.positionVec)
+                local distance = utils.calcMagnitudeV(distanceVec)
+
+                local kEnergy = 0.5 * planetO.mass * utils.calcMagnitudeV(planetO.velocityVec) ^ 2
+                local gEnergy = -1 * constant * planetO.mass * planetE.mass / distance
+                totalEnergy = totalEnergy + kEnergy + gEnergy
+            end
+        end
+    end
+    return totalEnergy
 end
 
 return PlanetarySystem
