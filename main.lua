@@ -9,8 +9,8 @@ local choice = 1
 local integrator = integrators[choice]
 local delta = 1/10
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
-local iterationTime = math.huge --In days
--- local iterationTime = 10s0--In days
+-- local iterationTime = math.huge --In days
+local iterationTime = 10000--In days
 local cameraSpeed = 1000
 local checks = 0
 local totalTime = 0
@@ -23,6 +23,7 @@ local mousePositionX = love.mouse.getX()
 local mousePositionY = love.mouse.getY()
 local tempX = love.mouse.getX()
 local tempY = love.mouse.getY()
+local outputValues
 
 local realTime = false
 local debug = false
@@ -31,6 +32,9 @@ local simulation = false
 local solarSystem = true
 local centerOnPlanet = false
 local canSpawn = false
+local plotGraph = true
+local fileClosed = false
+local render = true
 
 --Objects
 ---@type PlanetarySystem
@@ -38,8 +42,7 @@ local system = planetarySystem:new()
 local camera = Camera:new(0,0,0)
 
 function love.load()
-    -- os.execute("python plot.py")
-
+    if plotGraph then outputValues = io.open("values.csv", "w") end
     camera:setScale(1, 1)
     camera:scale(100)
 
@@ -140,9 +143,18 @@ function love.update(dt)
             end
 
             -- Compute the total energy of the system each tick
-            totalEnergy = 0
-            totalEnergy = totalEnergy + system:computeTotalEnergy(constant)
+            totalEnergy = system:computeTotalEnergy(constant)
             print((totalEnergy - initialEnergy) / initialEnergy)
+
+            if plotGraph then
+                outputValues:write(string.format("%.20f, %.20f\n", totalTime, (totalEnergy - initialEnergy) / initialEnergy))
+            end
+        else
+            if not fileClosed then
+                outputValues:close()
+                fileClosed = true
+                os.execute("python plot.py")
+            end
         end
     end
 
@@ -175,13 +187,15 @@ function love.draw()
     love.graphics.print(string.format("Fps: %.2f", love.timer.getFPS()), 0, 96)
     love.graphics.print(string.format("ShowTrail: %s", showTrail), 0, 108)
 
-    for i,planet in ipairs(system.planets) do
-        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z), 0, 132 + i * 12)
-    end
+    if render then
+        for i,planet in ipairs(system.planets) do
+            love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z), 0, 132 + i * 12)
+        end
 
-    camera:set()
-    system:draw(showTrail, camera)
-    camera:unset()
+        camera:set()
+        system:draw(showTrail, camera)
+        camera:unset()
+    end
 end
 
 --Controls
@@ -200,6 +214,7 @@ function love.keypressed(key, scancode, isrepeat)
         integrator = integrators[choice]
     end
     if key == "l" then canSpawn = not canSpawn end
+    if key == "r" then render = not render end
 end
 
 function love.wheelmoved(x, y)
