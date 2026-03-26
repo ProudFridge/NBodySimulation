@@ -35,6 +35,13 @@ function Vector3D:substract(Vector)
     return Vector3D:new(Vector.x - self.x, Vector.y - self.y, Vector.z - self.z)
 end
 
+---Multiplies a vector by a scalar
+---@param scalar number
+---@return Vector3D OutputVector
+function Vector3D:multiply(scalar)
+    return Vector3D:new(self.x * scalar, self.y * scalar, self.z * scalar)
+end
+
 ---Calculates the magnitude of a vector
 ---@return number Magnitude
 function Vector3D:magnitude()
@@ -47,5 +54,14 @@ function Vector3D:unitVector()
     local magnitude = self:magnitude()
     return Vector3D:new(self.x / magnitude, self.y / magnitude, self.z / magnitude)
 end
+
+---Sets the values of a vector
+---@param Vector Vector3D Values to be set as
+function Vector3D:set(Vector)
+    self.x = Vector.x
+    self.y = Vector.y
+    self.z = Vector.z
+end
+
 
 return Vector3D
