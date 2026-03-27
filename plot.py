@@ -10,7 +10,7 @@ with open("values.csv", "r") as file:
         yValues.append(float(content[1]))
         xValues.append(float(content[0]))
 
-plt.plot(xValues , yValues)
+plt.semilogy(xValues , yValues)
 plt.xlabel('Time')
 plt.ylabel('|(E(t)-E0)/E0|')
 plt.show()

@@ -10,7 +10,7 @@ local integrator = integrators[choice]
 local delta = 1/10
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
 -- local iterationTime = math.huge --In days
-local iterationTime = 10000--In days
+local iterationTime = 100--In days
 local cameraSpeed = 1000
 local checks = 0
 local totalTime = 0
@@ -147,7 +147,7 @@ function love.update(dt)
             print((totalEnergy - initialEnergy) / initialEnergy)
 
             if plotGraph then
-                outputValues:write(string.format("%.20f, %.20f\n", totalTime, (totalEnergy - initialEnergy) / initialEnergy))
+                outputValues:write(string.format("%.20f, %.20f\n", totalTime, math.abs((totalEnergy - initialEnergy) / initialEnergy)))
             end
         else
             if not fileClosed then
