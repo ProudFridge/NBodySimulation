@@ -4,9 +4,6 @@ local planetarySystem = require("planetarySystem")
 local Vector3D = require("vector3d")
 
 --Globals
-local integrators = {"Euler", "Verlet"} --Verlet or Euler
-local choice = 1
-local integrator = integrators[choice]
 local delta = 1/10
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
 -- local iterationTime = math.huge --In days
@@ -38,7 +35,7 @@ local render = true
 
 --Objects
 ---@type PlanetarySystem
-local system = planetarySystem:new()
+local system = planetarySystem:new("VERLET")
 local camera = Camera:new(0,0,0)
 
 function love.load()
@@ -136,12 +133,8 @@ function love.update(dt)
             totalTime = totalTime + delta
 
             --Simulates the system
-            if integrator == "Euler" then
-                system:eulerIntegrator(constant, delta, checks)
-            elseif integrator == "Verlet" then
-                system:verletIntegrator(constant, delta, checks)
-            end
-
+            system:integrate(constant, delta, checks)
+            
             -- Compute the total energy of the system each tick
             totalEnergy = system:computeTotalEnergy(constant)
             print((totalEnergy - initialEnergy) / initialEnergy)
@@ -174,7 +167,7 @@ end
 -- Draws everything
 function love.draw()
     love.graphics.setColor(1,1,1 )
-    love.graphics.print(string.format("%s", integrators[choice]), love.graphics.getWidth() / 2, 0)
+    love.graphics.print(string.format("%s", tostring(system.activeIntegrator)), love.graphics.getWidth() / 2, 0)
 
     love.graphics.print(string.format("%.0f bodies", #system.planets), 0,0)
     love.graphics.print(string.format("%.0f checks", checks), 0, 12)
@@ -209,10 +202,7 @@ function love.keypressed(key, scancode, isrepeat)
     if key == "1" then debug = not debug end
     if key == "t" then showTrail = not showTrail end
     if key == "x" then centerOnPlanet = not centerOnPlanet end
-    if key == "i" then 
-        choice = (choice % 2) + 1 
-        integrator = integrators[choice]
-    end
+    -- if key == "i" then     end
     if key == "l" then canSpawn = not canSpawn end
     if key == "r" then render = not render end
 end

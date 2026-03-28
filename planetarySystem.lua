@@ -4,14 +4,17 @@ local planet = require("planet")
 ---@class PlanetarySystem
 ---@field planets Planet
 local PlanetarySystem = {}
-
 PlanetarySystem.__index = PlanetarySystem
 
-function PlanetarySystem:new()
+---PlanetarySystem constructor
+---@param integrator string
+---@return PlanetarySystem
+function PlanetarySystem:new(integrator)
     local newPlanetarySystem = {}
     setmetatable(newPlanetarySystem, PlanetarySystem)
 
     newPlanetarySystem.planets = {}
+    newPlanetarySystem:selectActiveIntegrator(integrator)
 
     return newPlanetarySystem
 end
@@ -171,4 +174,19 @@ function PlanetarySystem:computeTotalEnergy(constant)
     return totalEnergy
 end
 
+---Selects the correct integrator function to ues
+---@param integrator string
+function PlanetarySystem:selectActiveIntegrator(integrator)
+    local integrators = {
+        EULER = PlanetarySystem.eulerIntegrator,
+        VERLET = PlanetarySystem.verletIntegrator
+    }
+
+    self.activeIntegrator = integrators[integrator]
+end
+
+function PlanetarySystem:integrate(constant, delta, checks)
+    self:activeIntegrator(constant, delta, checks)
+end
+    
 return PlanetarySystem
