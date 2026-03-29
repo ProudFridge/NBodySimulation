@@ -114,8 +114,8 @@ function simulation:update(dt)
 
     -- Spawns planets throughout a certain interval
     if canSpawn then
-        local from = 1
-        local to = 8
+        local from = 0.2
+        local to = 4
         local max = 500
         local mass = 5.1499991953912e-05
 
@@ -207,10 +207,11 @@ end
 
 function simulation:keypressed(key, scancode, isrepeat)
     if key == "c" then system:clearAllPlanets() end
-    if key == "n" then currentPlanet = (currentPlanet + 1) % #system.planets end
     if key == "space" then system.runSimulation = not system.runSimulation end
+    if key == "f" then system.renderNames = not system.renderNames end
     if key == "t" then showTrail = not showTrail end
     if key == "x" then centerOnPlanet = not centerOnPlanet end
+    if key == "n" then currentPlanet = (currentPlanet + 1) % #system.planets end
     if key == "l" then canSpawn = not canSpawn end
     if key == "r" then render = not render end
 

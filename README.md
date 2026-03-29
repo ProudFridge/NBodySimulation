@@ -9,3 +9,7 @@ N-body simulator that currently support euler and verlet integration.
 - **space**: pause/resume the simulation
 - **r**: toggle planet rendering
 - **t**: toggle planet trail
+- **f**: toggle planet names
+- **l**: spawn 500 planets in a circular orbit around the sun
+- **x**: center the camera on a planet
+- **n**: switch the centered camera to the next planet in the system

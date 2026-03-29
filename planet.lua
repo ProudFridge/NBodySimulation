@@ -115,7 +115,7 @@ function Planet.generateCircularOrbitPlanet(distance, angle, mass, constant, sun
     local velocityX = -velocity * (positionY / distance)
     local velocityY = velocity * (positionX / distance)
 
-    return Planet:new({r=1,g=1,b=1}, nil, mass, 1.6379, {x=positionX + offsetX, y=positionY + offsetY,z=0},{x=velocityX,y=velocityY,z=0})
+    return Planet:new("CircularOrbit",{r=1,g=1,b=1}, nil, mass, 1.6379, Vector3D:new(positionX + offsetX, positionY + offsetY,0), Vector3D:new(velocityX, velocityY, 0))
 end
 
 return Planet
