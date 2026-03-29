@@ -3,17 +3,23 @@ local planet = require("planet")
 
 ---@class PlanetarySystem
 ---@field planets Planet
+---@field constant number
+---@field delta number
 local PlanetarySystem = {}
 PlanetarySystem.__index = PlanetarySystem
 
 ---PlanetarySystem constructor
 ---@param integrator string
+---@param constant number
+---@param delta number
 ---@return PlanetarySystem
-function PlanetarySystem:new(integrator)
+function PlanetarySystem:new(integrator, constant, delta)
     local newPlanetarySystem = {}
     setmetatable(newPlanetarySystem, PlanetarySystem)
 
     newPlanetarySystem.planets = {}
+    newPlanetarySystem.constant = constant
+    newPlanetarySystem.delta = delta
     newPlanetarySystem:selectActiveIntegrator(integrator)
 
     return newPlanetarySystem
@@ -56,15 +62,14 @@ end
 ---@param delta number
 ---@param checks number
 ---@param scale number
-function PlanetarySystem:eulerIntegrator(constant, delta, checks)
+function PlanetarySystem:eulerIntegrator()
     for i = 1, #self.planets do
         for j = 1, #self.planets do 
             if j ~= i then
                 local planet1 = self.planets[i]
                 local planet2 = self.planets[j]
-                local force = gravity.computeGravitationalForce(planet1, planet2, constant)
-                gravity.computeVelocity(planet1, planet2, delta, force)
-                checks = checks + 1
+                local force = gravity.computeGravitationalForce(planet1, planet2, self.constant)
+                gravity.computeVelocity(planet1, planet2, self.delta, force)
             end
         end
     end
@@ -78,30 +83,26 @@ end
 ---The following method must be used at the start of the simulation so that Verlet integration will work
 ---@param constant number
 ---@param delta number
-function PlanetarySystem:verletIntegratorSetup(constant, delta)
+function PlanetarySystem:verletIntegratorSetup()
     for i = 1, #self.planets do
         for j = 1, #self.planets do
             if j ~= i then
                 local planet1 = self.planets[i]
                 local planet2 = self.planets[j]
 
-                local force = gravity.computeGravitationalForce(planet1, planet2, constant)
-                gravity.computeVelocity(planet1, planet2, delta, force)
+                local force = gravity.computeGravitationalForce(planet1, planet2, self.constant)
+                gravity.computeVelocity(planet1, planet2, self.delta, force)
             end 
         end
     end
 
     for i = 1, #self.planets do
-        gravity.initialVerletSetup(self.planets[i], delta)
+        gravity.initialVerletSetup(self.planets[i], self.delta)
     end
 end
 
 ---Iterates over a planetList and advances each planet's position using Verlet integration
----@param constant number
----@param delta number
----@param checks number
----@param scale number
-function PlanetarySystem:verletIntegrator(constant, delta, checks)
+function PlanetarySystem:verletIntegrator()
     for i = 1, #self.planets do
         self.planets[i].accelerationVec.x = 0
         self.planets[i].accelerationVec.y = 0
@@ -113,15 +114,14 @@ function PlanetarySystem:verletIntegrator(constant, delta, checks)
             if j ~= i then
                 local planet1 = self.planets[i]
                 local planet2 = self.planets[j]
-                local force = gravity.computeGravitationalForce(planet1, planet2, constant)
-                gravity.computeAcceleration(planet1, planet2, delta, force)
-                checks = checks + 1
+                local force = gravity.computeGravitationalForce(planet1, planet2, self.constant)
+                gravity.computeAcceleration(planet1, planet2, self.delta, force)
             end
         end
     end
 
     for i = 1, #self.planets do
-        gravity.advanceVerlet(self.planets[i], delta)
+        gravity.advanceVerlet(self.planets[i], self.delta)
         self.planets[i]:insertTrailPoint(100, 0.1)
     end
 end
@@ -185,8 +185,8 @@ function PlanetarySystem:selectActiveIntegrator(integrator)
     self.activeIntegrator = integrators[integrator]
 end
 
-function PlanetarySystem:integrate(constant, delta, checks)
-    self:activeIntegrator(constant, delta, checks)
+function PlanetarySystem:integrate()
+    self:activeIntegrator()
 end
     
 return PlanetarySystem
