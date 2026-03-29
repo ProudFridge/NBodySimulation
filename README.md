@@ -9,5 +9,3 @@ N-body simulator that currently support euler and verlet integration.
 - space: pause/resume the simulation
 - r: toggle planet rendering
 - t: toggle planet trail
-
-![banner](/)
