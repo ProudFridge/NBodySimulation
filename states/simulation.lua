@@ -7,15 +7,9 @@ local Planet = require("planet")
 local simulation = {}
 
 --Globals
-local delta = 1/10
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
--- local iterationTime = math.huge --In days
-local iterationTime = 1000--In days
 local cameraSpeed = 1000
-local totalTime = 0
 local currentPlanet = 0
-local totalEnergy = 0
-local initialEnergy = 0
 local oldMousePositionX
 local oldMousePositionY
 local mousePositionX = love.mouse.getX()
@@ -27,7 +21,6 @@ local tempY = love.mouse.getY()
 local realTime = false
 local debug = false
 local showTrail = true
-local runSimulation = false
 local solarSystem = true
 local centerOnPlanet = false
 local canSpawn = false
@@ -37,23 +30,27 @@ local render = true
 
 --Objects
 ---@type PlanetarySystem
-local system = PlanetarySystem:new("VERLET", constant, delta)
+local system = PlanetarySystem:new("Verlet", constant, 0.1, math.huge)
 local camera = Camera:new(0,0,0)
 
 
-function simulation:init()
+function simulation:enter(prev, config)
        -- if plotGraph then outputValues = io.open("values.csv", "w") end
+    system:selectActiveIntegrator(config.integrator)
+    system.delta = config.delta or 0.1
     camera:setScale(1, 1)
     camera:scale(100)
 
+    love.graphics.setBackgroundColor(0, 0, 0, 0)
+
         --Make a day pass each second
     if realTime then
-        delta = 1/60
+        system.delta = 1/60
     end
 
     if solarSystem then
         camera:setScale(1, 1)
-        camera:scale(12000)
+        camera:scale(300)
 
         --Positions of the solarSystem on 2026-01-01 00:00 UT
         local solarSystem = {
@@ -79,12 +76,13 @@ function simulation:init()
 
         --Sets up initial values to use with verlet integration
         system:verletIntegratorSetup()
-        initialEnergy = system:computeTotalEnergy(constant)
     end
 end
 
-function simulation:update()
+function simulation:update(dt)
     if love.keyboard.isDown("escape") then love.event.quit() end
+
+    system:integrate()
 
     ---Rotates the system by dragging the mouse
     tempX = mousePositionX
@@ -126,32 +124,6 @@ function simulation:update()
         canSpawn = not canSpawn
     end
 
-    if runSimulation then
-        if totalTime < iterationTime then
-            if totalTime + delta > iterationTime then
-                delta = iterationTime - totalTime
-            end
-            totalTime = totalTime + delta
-
-            --Simulates the system
-            system:integrate()
-            
-            -- Compute the total energy of the system each tick
-            totalEnergy = system:computeTotalEnergy(constant)
-            print((totalEnergy - initialEnergy) / initialEnergy)
-
-            -- if plotGraph then
-            --     outputValues:write(string.format("%.20f, %.20f\n", totalTime, math.abs((totalEnergy - initialEnergy) / initialEnergy)))
-            -- end
-        -- else
-        --     if not fileClosed then
-        --         outputValues:close()
-        --         fileClosed = true
-        --         os.execute("python plot.py")
-        --     end
-        end
-    end
-
     --Centers the camera on the specified planet
     if centerOnPlanet then
         local planet = system.planets[currentPlanet + 1]
@@ -168,15 +140,14 @@ end
 
 function simulation:draw()
     love.graphics.setColor(1,1,1 )
-    love.graphics.print(string.format("%s", tostring(system.activeIntegrator)), love.graphics.getWidth() / 2, 0)
-
+    love.graphics.print(string.format("%s", tostring(system.integrator)), love.graphics.getWidth() / 2, 0)
     love.graphics.print(string.format("%.0f bodies", #system.planets), 0,0)
-    love.graphics.print(string.format("%f days", totalTime), 0, 24)
+    love.graphics.print(string.format("%f days", system.totalTime), 0, 24)
     love.graphics.print(string.format("Camera zoom: %.3f,%.3f", camera.scaleX, camera.scaleY), 0, 36)
     love.graphics.print(string.format("Camera x and y: %.3f, %.3f", camera.posX, camera.posY), 0, 48)
     love.graphics.print(string.format("Camera rotation: %.3f, %.3f, %.3f", camera.rotX, camera.rotY, camera.rotZ), 0, 60)
     love.graphics.print(string.format("Current Planet: %.0f", currentPlanet), 0, 72)
-    love.graphics.print(string.format("delta: %.8f", delta), 0, 84)
+    love.graphics.print(string.format("delta: %.8f", system.delta), 0, 84)
     love.graphics.print(string.format("Fps: %.2f", love.timer.getFPS()), 0, 96)
     love.graphics.print(string.format("ShowTrail: %s", showTrail), 0, 108)
 
@@ -197,7 +168,7 @@ function simulation:keypressed(key)
         currentPlanet = (currentPlanet + 1) % #system.planets
     end
 
-    if key == "space" then runSimulation = not runSimulation end
+    if key == "space" then system.runSimulation = not system.runSimulation end
     if key == "1" then debug = not debug end
     if key == "t" then showTrail = not showTrail end
     if key == "x" then centerOnPlanet = not centerOnPlanet end

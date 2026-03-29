@@ -5,6 +5,12 @@ local planet = require("planet")
 ---@field planets Planet
 ---@field constant number
 ---@field delta number
+---@field integrator string
+---@field iterationTime number
+---@field totalTime number
+---@field initialEnergy number
+---@field totalEnergy
+---@field runSimulation boolean
 local PlanetarySystem = {}
 PlanetarySystem.__index = PlanetarySystem
 
@@ -12,14 +18,22 @@ PlanetarySystem.__index = PlanetarySystem
 ---@param integrator string
 ---@param constant number
 ---@param delta number
+---@param iterationTime number
 ---@return PlanetarySystem
-function PlanetarySystem:new(integrator, constant, delta)
+function PlanetarySystem:new(integrator, constant, delta, iterationTime)
     local newPlanetarySystem = {}
     setmetatable(newPlanetarySystem, PlanetarySystem)
 
     newPlanetarySystem.planets = {}
     newPlanetarySystem.constant = constant
     newPlanetarySystem.delta = delta
+    newPlanetarySystem.integrator = integrator
+    newPlanetarySystem.iterationTime = iterationTime
+    newPlanetarySystem.totalTime = 0
+    newPlanetarySystem.runSimulation = true
+    --Change because its calcualting the energy when there's no planets
+    newPlanetarySystem.initialEnergy = newPlanetarySystem:computeTotalEnergy()
+    newPlanetarySystem.totalEnergy = newPlanetarySystem.initialEnergy
     newPlanetarySystem:selectActiveIntegrator(integrator)
 
     return newPlanetarySystem
@@ -58,10 +72,6 @@ function PlanetarySystem:draw(renderTrail, camera)
 end
 
 ---Iterates over the list of planets and advances each planet's position using Euler integration
----@param constant number
----@param delta number
----@param checks number
----@param scale number
 function PlanetarySystem:eulerIntegrator()
     for i = 1, #self.planets do
         for j = 1, #self.planets do 
@@ -75,14 +85,12 @@ function PlanetarySystem:eulerIntegrator()
     end
 
     for i = 1, #self.planets do
-        gravity.advancePosition(self.planets[i], delta)
+        gravity.advancePosition(self.planets[i], self.delta)
         self.planets[i]:insertTrailPoint(100, 0.1)
     end
 end
 
 ---The following method must be used at the start of the simulation so that Verlet integration will work
----@param constant number
----@param delta number
 function PlanetarySystem:verletIntegratorSetup()
     for i = 1, #self.planets do
         for j = 1, #self.planets do
@@ -178,15 +186,40 @@ end
 ---@param integrator string
 function PlanetarySystem:selectActiveIntegrator(integrator)
     local integrators = {
-        EULER = PlanetarySystem.eulerIntegrator,
-        VERLET = PlanetarySystem.verletIntegrator
+        Euler = PlanetarySystem.eulerIntegrator,
+        Verlet = PlanetarySystem.verletIntegrator
     }
 
+    self.integrator = integrator
     self.activeIntegrator = integrators[integrator]
 end
 
 function PlanetarySystem:integrate()
-    self:activeIntegrator()
+    if self.runSimulation then
+        if self.totalTime < self.iterationTime then
+            if self.totalTime + self.delta > self.iterationTime then
+                self.delta = self.iterationTime - self.totalTime
+            end
+            self.totalTime = self.totalTime + self.delta
+
+            --Simulates the system
+            self:activeIntegrator()
+            
+            -- Compute the total energy of the system each tick
+            -- self.totalEnergy = self:computeTotalEnergy(self.constant)
+            -- print((self.totalEnergy - self.initialEnergy) / self.initialEnergy)
+
+            -- if plotGraph then
+            --     outputValues:write(string.format("%.20f, %.20f\n", totalTime, math.abs((totalEnergy - initialEnergy) / initialEnergy)))
+            -- end
+        -- else
+        --     if not fileClosed then
+        --         outputValues:close()
+        --         fileClosed = true
+        --         os.execute("python plot.py")
+        --     end
+        end
+    end
 end
     
 return PlanetarySystem

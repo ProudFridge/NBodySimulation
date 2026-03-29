@@ -1,9 +1,46 @@
 local Gamestate = require("gamestate")
+local nuklear = require("nuklear")
 
+local ui
 local menu = {}
+local centerX, centerY = love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 80
+local integratorIdx = 1
+local integrators = {"Euler", "Verlet"}
+local delta = {value = ""}
+
+function menu:init()
+    love.keyboard.setKeyRepeat(true)
+    ui = nuklear.newUI()
+    love.graphics.setBackgroundColor(100/255, 30/255, 14/255, 0)
+end
+
+function menu:update(dt)
+	ui:frameBegin()
+	if ui:windowBegin('Simulation Setup', centerX, centerY, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
+
+		ui:layoutRow('dynamic', 30, 2)
+        if ui:widgetIsHovered() then
+            
+        end
+		ui:label('Simulation delta')
+        ui:edit('simple', delta)
+
+        ui:layoutRow('dynamic', 30, 2)
+        ui:label("Integrator:")
+        integratorIdx = ui:combobox(integratorIdx, integrators)
+
+        ui:layoutRow('dynamic', 30, 1)
+        if ui:button('Start') then
+            print('Starting simulation!')
+            Gamestate.switch(require("states.simulation"), {integrator = integrators[integratorIdx], delta = tonumber(delta.value)})
+        end
+    end
+	ui:windowEnd()
+	ui:frameEnd()
+end
 
 function menu:draw()
-    love.graphics.print("Press Enter to continue", 10, 10)
+    ui:draw()
 end
 
 function menu:keyreleased(key, code)
@@ -11,6 +48,47 @@ function menu:keyreleased(key, code)
         local Simulation = require("states.simulation")
         Gamestate.switch(Simulation)
     end
+
+    if ui:keyreleased(key, code) then
+		return -- event consumed
+	end
 end
+
+function menu:keypressed(key, scancode, isrepeat)
+	if ui:keypressed(key, scancode, isrepeat) then
+		return -- event consumed
+	end
+    if key == "escape" then love.event.quit() end
+end
+
+function menu:mousepressed(x, y, button, istouch, presses)
+	if ui:mousepressed(x, y, button, istouch, presses) then
+		return -- event consumed
+	end
+end
+
+function menu:mousereleased(x, y, button, istouch, presses)
+	if ui:mousereleased(x, y, button, istouch, presses) then
+		return -- event consumed
+	end
+end
+
+function menu:mousemoved(x, y, dx, dy, istouch)
+	if ui:mousemoved(x, y, dx, dy, istouch) then
+		return -- event consumed
+	end
+end
+
+function menu:textinput(text)
+	if ui:textinput(text) then
+		return -- event consumed
+	end
+end
+
+-- function menu.wheelmoved(x, y)
+-- 	if ui:wheelmoved(x, y) then
+-- 		return -- event consumed
+-- 	end
+-- end
 
 return menu
