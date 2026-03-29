@@ -1,6 +1,7 @@
 local Vector3D = require("vector3d")
 
 ---@class Planet
+---@field name string
 ---@field color table
 ---@field radius number
 ---@field mass number
@@ -14,6 +15,7 @@ local Planet = {}
 Planet.__index = Planet
 
 ---Planet constructor
+---@param name string
 ---@param color table
 ---@param radius number
 ---@param mass number
@@ -21,11 +23,12 @@ Planet.__index = Planet
 ---@param positionVec Vector3D
 ---@param velocityVec Vector3D
 ---@return table
-function Planet:new(color, radius, mass, density, positionVec, velocityVec)
+function Planet:new(name, color, radius, mass, density, positionVec, velocityVec)
     local newPlanet = {}
     setmetatable(newPlanet, Planet)
 
     --Creating the fields for the new object
+    newPlanet.name = name
     newPlanet.color = color
     newPlanet.mass = mass --kg
     newPlanet.density = density or 5.513 --kg per cubic meter
@@ -46,10 +49,18 @@ function Planet:new(color, radius, mass, density, positionVec, velocityVec)
     return newPlanet
 end
 
-function Planet:draw(camera)
+---Draws the camera in 3D
+---@param camera Camera
+---@param renderNames boolean
+function Planet:draw(camera, renderNames)
     love.graphics.setColor(self.color.r, self.color.g, self.color.b)
     local newVector = camera:rotateAll({x=self.positionVec.x,y=self.positionVec.y,z=self.positionVec.z})
     love.graphics.ellipse("fill", newVector.x, newVector.y, self.radius * 100, self.radius * 100, 100)
+
+    --Print the names of each planets
+    if renderNames then
+        love.graphics.print(string.format("%s", self.name), newVector.x, newVector.y, 0, camera.scaleX, camera.scaleY)
+    end
 end
 
 function Planet:insertTrailPoint(maxPoints, interval)

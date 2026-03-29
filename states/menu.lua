@@ -7,7 +7,9 @@ local centerX, centerY = love.graphics.getWidth() / 2, love.graphics.getHeight()
 local integratorIdx = 1
 local integrators = {"Euler", "Verlet"}
 local delta = {value = ""}
-local tempLogo = love.graphics.newText(love.graphics.newFont(), "NBodySimulation")
+local iterationTime = {value = ""}
+local uiWidth, uiHeight = 340, 260
+local logo = love.graphics.newImage("Logo.png")
 
 function menu:init()
     love.keyboard.setKeyRepeat(true)
@@ -17,7 +19,7 @@ end
 
 function menu:update(dt)
 	ui:frameBegin()
-	if ui:windowBegin('Simulation Setup', centerX - 150, centerY- 80, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
+	if ui:windowBegin('Simulation Setup', centerX - uiWidth / 2, centerY - uiHeight / 2, uiWidth, uiHeight, 'border', 'title', 'movable', 'scalable', 'scrollbar', 'minimizable') then
 
 		ui:layoutRow('dynamic', 30, 2)
         if ui:widgetIsHovered() then
@@ -27,13 +29,17 @@ function menu:update(dt)
         ui:edit('simple', delta)
 
         ui:layoutRow('dynamic', 30, 2)
+		ui:label('Simulation time')
+        ui:edit('simple', iterationTime)
+
+        ui:layoutRow('dynamic', 30, 2)
         ui:label("Integrator:")
         integratorIdx = ui:combobox(integratorIdx, integrators)
 
         ui:layoutRow('dynamic', 30, 1)
         if ui:button('Start') then
             print('Starting simulation!')
-            Gamestate.switch(require("states.simulation"), {integrator = integrators[integratorIdx], delta = tonumber(delta.value)})
+            Gamestate.switch(require("states.simulation"), {integrator = integrators[integratorIdx], delta = tonumber(delta.value), iterationTime = tonumber(iterationTime.value) })
         end
     end
 	ui:windowEnd()
@@ -41,7 +47,7 @@ function menu:update(dt)
 end
 
 function menu:draw()
-    love.graphics.draw(tempLogo, centerX - tempLogo:getWidth() / 2, 10)
+    love.graphics.draw(logo, centerX - logo:getWidth() / 2, 200)
     ui:draw()
 end
 

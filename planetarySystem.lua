@@ -9,8 +9,9 @@ local planet = require("planet")
 ---@field iterationTime number
 ---@field totalTime number
 ---@field initialEnergy number
----@field totalEnergy
+---@field totalEnergy number
 ---@field runSimulation boolean
+---@field renderNames boolean
 local PlanetarySystem = {}
 PlanetarySystem.__index = PlanetarySystem
 
@@ -31,6 +32,7 @@ function PlanetarySystem:new(integrator, constant, delta, iterationTime)
     newPlanetarySystem.iterationTime = iterationTime
     newPlanetarySystem.totalTime = 0
     newPlanetarySystem.runSimulation = true
+    newPlanetarySystem.renderNames = true
     --Change because its calcualting the energy when there's no planets
     newPlanetarySystem.initialEnergy = newPlanetarySystem:computeTotalEnergy()
     newPlanetarySystem.totalEnergy = newPlanetarySystem.initialEnergy
@@ -43,10 +45,13 @@ end
 ---@param renderTrail boolean Whether or not the planet's trails should be rendered
 ---@param camera Camera Camera object
 function PlanetarySystem:draw(renderTrail, camera)
+    --Draw planet points
     for i = 1, #self.planets do
-            local planet = self.planets[i]
-            planet:draw(camera)
-        end
+        local planet = self.planets[i]
+        planet:draw(camera, self.renderNames)
+    end
+
+    --Draw planet orbits
     if renderTrail then
         local convert = function (pointList)
             local newPoints = {}
@@ -58,7 +63,6 @@ function PlanetarySystem:draw(renderTrail, camera)
             return newPoints
         end
 
-        -- love.graphics.setLineWidth(camera.scaleX)
         love.graphics.setLineWidth(camera.scaleX)
         love.graphics.setColor({1,1,1,1})
         for i = 1, #self.planets do

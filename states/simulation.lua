@@ -9,6 +9,7 @@ local simulation = {}
 
 --Globals
 local ui
+local planetPositionUi
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
 local cameraSpeed = 1000
 local currentPlanet = 0
@@ -38,15 +39,17 @@ local camera = Camera:new(0,0,0)
 
 function simulation:enter(prev, config)
     ui = nuklear.newUI()
-       -- if plotGraph then outputValues = io.open("values.csv", "w") end
+    planetPositionUi = nuklear.newUI()
+    -- if plotGraph then outputValues = io.open("values.csv", "w") end
     system:selectActiveIntegrator(config.integrator)
     system.delta = config.delta or 0.1
+    system.iterationTime = config.iterationTime or math.huge
     camera:setScale(1, 1)
     camera:scale(100)
 
     love.graphics.setBackgroundColor(0, 0, 0, 0)
 
-        --Make a day pass each second
+    --Make a day pass each second
     if realTime then
         system.delta = 1/60
     end
@@ -57,21 +60,21 @@ function simulation:enter(prev, config)
 
         --Positions of the solarSystem on 2026-01-01 00:00 UT
         local solarSystem = {
-            {{r=255/255,g=255/255,b=0/255}, nil, 1, 1408, Vector3D:new(0, 0, 0), Vector3D:new(0, 0, 0)}, --Sun
-            {{r=192/255,g=192/255,b=192/255}, 1.63e-05, 1.66051140935277e-07, 5.4291, Vector3D:new(-2.182532148826417E-01, -4.147503430219470E-01, -1.357376603300347E-02), Vector3D:new(1.923954359892052E-02, -1.173646867098573E-02, -2.723258998211985E-03)}, --Mercury
-            {{r=255/255,g=153/255,b=153/255}, 4.05e-05, 2.44827371182131e-06, 5.2425, Vector3D:new(8.582590477234082E-02, -7.272937889997890E-01, -1.491326729034871E-02), Vector3D:new(1.994568152897905E-02, 2.400988121393758E-03, -1.117598418900537E-03)}, --Venus
-            {{r=51/255,g=255/255,b=51/255}, 4.26e-05, 3.00329789031573e-06, 1, Vector3D:new(-1.773625676903416E-01, 9.622230956380571E-01, 7.223916497206547E-05), Vector3D:new(-1.719732726632393E-02, -3.116668998580179E-03, 1.014395459100633E-07)}, -- Earth
-            {{r=224/255,g=224/255,b=224/255}, 1.16e-05, 3.673e-8, 1, Vector3D:new(-1.763982742720193E-01, 9.644251653583968E-01, 2.844972803225625E-04), Vector3D:new(-1.777741715778527E-02, -2.873710949519302E-03, 3.316236639603233E-06)}, -- Moon
-            {{r=255/255,g=51/255,b=51/255}, 2.27e-05, 3.22773848604808e-07, 3.9299, Vector3D:new(3.375236724053181E-01, -1.392531709307832E+00, -3.728574375535873E-02), Vector3D:new(1.412656035077045E-02, 4.540493711705869E-03, -2.512182043289334E-04)},--Mars
-            {{r=255/255,g=128/255,b=0/255}, 4.67e-04, 0.000954532562518104, 1.3262, Vector3D:new(-1.697076130448002E+00, 4.923347702917086e+00, 1.755806051536397E-02), Vector3D:new(-7.223436992215231E-03, -2.101370296453924E-03, 1.703650119141758E-04)},--Jupiter
-            {{r=255/255,g=204/255,b=153/255}, 3.89e-04, 0.00028579654259599, 0.6871, Vector3D:new(9.504273970834813E+00, 2.522101664364687E-01, -3.828040603208088E-01), Vector3D:new(-4.561877280517422E-04, 5.564228180710301E-03, -7.827700476854283E-05)}, --Saturn
-            {{r=102/255,g=255/255,b=255/255}, 1.70e-04, 4.3655207025844e-05, 1.2704, Vector3D:new(9.877240875409560E+00, 1.679448024414335E+01, -6.558791407095442E-02), Vector3D:new(-3.419297363931050E-03, 1.810588631864154E-03, 5.115493044190684E-05)},--Uranus
-            {{r=102/255,g=178/255,b=255/255}, 1.65e-04, 5.1499991953912e-05, 1.6379, Vector3D:new(2.986905306243377E+01, 5.134087037148546E-01, -6.989358350296304E-01), Vector3D:new(-7.477087522444120E-05, 3.156853451464882E-03, -6.356496658297069E-05)} --Nepture
+            {"Sun",{r=255/255,g=255/255,b=0/255}, nil, 1, 1408, Vector3D:new(0, 0, 0), Vector3D:new(0, 0, 0)}, --Sun
+            {"Mercury",{r=192/255,g=192/255,b=192/255}, 1.63e-05, 1.66051140935277e-07, 5.4291, Vector3D:new(-2.182532148826417E-01, -4.147503430219470E-01, -1.357376603300347E-02), Vector3D:new(1.923954359892052E-02, -1.173646867098573E-02, -2.723258998211985E-03)}, --Mercury
+            {"Venus",{r=255/255,g=153/255,b=153/255}, 4.05e-05, 2.44827371182131e-06, 5.2425, Vector3D:new(8.582590477234082E-02, -7.272937889997890E-01, -1.491326729034871E-02), Vector3D:new(1.994568152897905E-02, 2.400988121393758E-03, -1.117598418900537E-03)}, --Venus
+            {"Earth",{r=51/255,g=255/255,b=51/255}, 4.26e-05, 3.00329789031573e-06, 1, Vector3D:new(-1.773625676903416E-01, 9.622230956380571E-01, 7.223916497206547E-05), Vector3D:new(-1.719732726632393E-02, -3.116668998580179E-03, 1.014395459100633E-07)}, -- Earth
+            {"Moon",{r=224/255,g=224/255,b=224/255}, 1.16e-05, 3.673e-8, 1, Vector3D:new(-1.763982742720193E-01, 9.644251653583968E-01, 2.844972803225625E-04), Vector3D:new(-1.777741715778527E-02, -2.873710949519302E-03, 3.316236639603233E-06)}, -- Moon
+            {"Mars",{r=255/255,g=51/255,b=51/255}, 2.27e-05, 3.22773848604808e-07, 3.9299, Vector3D:new(3.375236724053181E-01, -1.392531709307832E+00, -3.728574375535873E-02), Vector3D:new(1.412656035077045E-02, 4.540493711705869E-03, -2.512182043289334E-04)},--Mars
+            {"Jupiter",{r=255/255,g=128/255,b=0/255}, 4.67e-04, 0.000954532562518104, 1.3262, Vector3D:new(-1.697076130448002E+00, 4.923347702917086e+00, 1.755806051536397E-02), Vector3D:new(-7.223436992215231E-03, -2.101370296453924E-03, 1.703650119141758E-04)},--Jupiter
+            {"Saturn",{r=255/255,g=204/255,b=153/255}, 3.89e-04, 0.00028579654259599, 0.6871, Vector3D:new(9.504273970834813E+00, 2.522101664364687E-01, -3.828040603208088E-01), Vector3D:new(-4.561877280517422E-04, 5.564228180710301E-03, -7.827700476854283E-05)}, --Saturn
+            {"Uranus",{r=102/255,g=255/255,b=255/255}, 1.70e-04, 4.3655207025844e-05, 1.2704, Vector3D:new(9.877240875409560E+00, 1.679448024414335E+01, -6.558791407095442E-02), Vector3D:new(-3.419297363931050E-03, 1.810588631864154E-03, 5.115493044190684E-05)},--Uranus
+            {"Neptune",{r=102/255,g=178/255,b=255/255}, 1.65e-04, 5.1499991953912e-05, 1.6379, Vector3D:new(2.986905306243377E+01, 5.134087037148546E-01, -6.989358350296304E-01), Vector3D:new(-7.477087522444120E-05, 3.156853451464882E-03, -6.356496658297069E-05)} --Nepture
         }
 
         for i = 1, #solarSystem do
             local newPlanet = solarSystem[i]
-            table.insert(system.planets, Planet:new(newPlanet[1], newPlanet[2], newPlanet[3], newPlanet[4], newPlanet[5], newPlanet[6]))
+            table.insert(system.planets, Planet:new(newPlanet[1], newPlanet[2], newPlanet[3], newPlanet[4], newPlanet[5], newPlanet[6], newPlanet[7]))
         end
         
         local newCenter = camera:rotateAll(system.planets[1].positionVec)
@@ -131,8 +134,9 @@ function simulation:update(dt)
         if love.keyboard.isDown("a") then camera:move(-cameraSpeed * camera.scaleX * dt, 0) end
     end
 
+    --Simulation details
     ui:frameBegin()
-	if ui:windowBegin('Simulation Details', 0 , 0, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
+	if ui:windowBegin('Simulation Details', 5 , 5, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
 
 		ui:layoutRow('dynamic', 12, 2)
         ui:label('FPS:')
@@ -152,7 +156,6 @@ function simulation:update(dt)
 		ui:layoutRow('dynamic', 12, 2)
         ui:label('ShowTrail:')
         ui:label(string.format('%s', showTrail))
-
     end
 
     --Only rotate the view when not dragging the window
@@ -166,29 +169,41 @@ function simulation:update(dt)
     
 	ui:windowEnd()
 	ui:frameEnd()
+
+    planetPositionUi:frameBegin()
+	if planetPositionUi:windowBegin('Planet Positions', 5 , 170, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
+        for i = 1, #system.planets do
+            local planet = system.planets[i]
+            planetPositionUi:layoutRow('dynamic', 12, 2)
+            planetPositionUi:label(string.format("%s", planet.name))
+            planetPositionUi:label(string.format('%0.3f, %0.3f, %0.3f', planet.positionVec.x, planet.positionVec.y, planet.positionVec.y))
+        end
+    end
+    planetPositionUi:windowEnd()
+    planetPositionUi:frameEnd()
 end
 
 function simulation:draw()
-    ui:draw()
+    --Print the active integrator
     love.graphics.setColor(1,1,1 )
     love.graphics.print(string.format("%s", tostring(system.integrator)), love.graphics.getWidth() / 2, 0)
-    love.graphics.print(string.format("Camera zoom: %.3f,%.3f", camera.scaleX, camera.scaleY), 0, 36)
-    love.graphics.print(string.format("Camera x and y: %.3f, %.3f", camera.posX, camera.posY), 0, 48)
-    love.graphics.print(string.format("Camera rotation: %.3f, %.3f, %.3f", camera.rotX, camera.rotY, camera.rotZ), 0, 60)
-    
-    for i,planet in ipairs(system.planets) do
-        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z), 0, 132 + i * 12)
-    end
 
     if render then
-
         camera:set()
         system:draw(showTrail, camera)
         camera:unset()
     end
+
+    ui:draw()
+    planetPositionUi:draw()
 end
 
-function simulation:keypressed(key)
+---Handle user detection for the ui
+local function input(name, ...)
+	return ui[name](ui, ...) or planetPositionUi[name](planetPositionUi, ...)
+end
+
+function simulation:keypressed(key, scancode, isrepeat)
     if key == "c" then system:clearAllPlanets() end
     if key == "n" then
         currentPlanet = (currentPlanet + 1) % #system.planets
@@ -201,6 +216,8 @@ function simulation:keypressed(key)
     -- if key == "i" then     end
     if key == "l" then canSpawn = not canSpawn end
     if key == "r" then render = not render end
+
+    input('keypressed', key, scancode, isrepeat)
 end
 
 function simulation:wheelmoved(z,y)
@@ -217,33 +234,23 @@ function simulation:keyreleased(key, code)
         Gamestate.switch(Simulation)
     end
 
-    if ui:keyreleased(key, code) then
-		return -- event consumed
-	end
+    input('keyreleased', key, code)
 end
 
 function simulation:mousepressed(x, y, button, istouch, presses)
-	if ui:mousepressed(x, y, button, istouch, presses) then
-		return -- event consumed
-	end
+	input('mousepressed', x, y, button, istouch, presses)
 end
 
 function simulation:mousereleased(x, y, button, istouch, presses)
-	if ui:mousereleased(x, y, button, istouch, presses) then
-		return -- event consumed
-	end
+    input('mousereleased', x, y, button, istouch, presses)
 end
 
 function simulation:mousemoved(x, y, dx, dy, istouch)
-	if ui:mousemoved(x, y, dx, dy, istouch) then
-		return -- event consumed
-	end
+    input('mousemoved', x, y, dx, dy, istouch)
 end
 
 function simulation:textinput(text)
-	if ui:textinput(text) then
-		return -- event consumed
-	end
+    input('textinput', text)
 end
 
 return simulation
