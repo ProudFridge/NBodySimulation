@@ -3,26 +3,27 @@ local nuklear = require("nuklear")
 
 local ui
 local menu = {}
-local centerX, centerY = love.graphics.getWidth() / 2 - 100, love.graphics.getHeight() / 2 - 80
+local centerX, centerY = love.graphics.getWidth() / 2, love.graphics.getHeight() / 2
 local integratorIdx = 1
 local integrators = {"Euler", "Verlet"}
 local delta = {value = ""}
+local tempLogo = love.graphics.newText(love.graphics.newFont(), "NBodySimulation")
 
 function menu:init()
     love.keyboard.setKeyRepeat(true)
     ui = nuklear.newUI()
-    love.graphics.setBackgroundColor(100/255, 30/255, 14/255, 0)
+    love.graphics.setBackgroundColor(100/255, 100/255, 104/255, 0)
 end
 
 function menu:update(dt)
 	ui:frameBegin()
-	if ui:windowBegin('Simulation Setup', centerX, centerY, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
+	if ui:windowBegin('Simulation Setup', centerX - 150, centerY- 80, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
 
 		ui:layoutRow('dynamic', 30, 2)
         if ui:widgetIsHovered() then
             
         end
-		ui:label('Simulation delta')
+		ui:label('Simulation timestep')
         ui:edit('simple', delta)
 
         ui:layoutRow('dynamic', 30, 2)
@@ -40,6 +41,7 @@ function menu:update(dt)
 end
 
 function menu:draw()
+    love.graphics.draw(tempLogo, centerX - tempLogo:getWidth() / 2, 10)
     ui:draw()
 end
 

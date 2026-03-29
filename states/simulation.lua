@@ -3,10 +3,12 @@ local PlanetarySystem = require("planetarySystem")
 local Camera = require("camera")
 local Vector3D = require("vector3d")
 local Planet = require("planet")
+local nuklear = require("nuklear")
 
 local simulation = {}
 
 --Globals
+local ui
 local constant = 2.9591220828559e-4 --When using Au, days and solar masses
 local cameraSpeed = 1000
 local currentPlanet = 0
@@ -35,6 +37,7 @@ local camera = Camera:new(0,0,0)
 
 
 function simulation:enter(prev, config)
+    ui = nuklear.newUI()
        -- if plotGraph then outputValues = io.open("values.csv", "w") end
     system:selectActiveIntegrator(config.integrator)
     system.delta = config.delta or 0.1
@@ -94,14 +97,6 @@ function simulation:update(dt)
     oldMousePositionX = tempX
     oldMousePositionY = tempY
 
-    if love.mouse.isDown(1) then
-        local newAngleY =  (mousePositionX - oldMousePositionX) * 1/100
-        local newAngleX = (mousePositionY - oldMousePositionY) * 1/100
-
-        camera.rotX = camera.rotX + newAngleX
-        camera.rotY = camera.rotY + newAngleY
-    end
-
     -- delta = dt
     -- delta = dt / 86400
 
@@ -135,26 +130,57 @@ function simulation:update(dt)
         if love.keyboard.isDown("d") then camera:move(cameraSpeed * camera.scaleX * dt, 0) end
         if love.keyboard.isDown("a") then camera:move(-cameraSpeed * camera.scaleX * dt, 0) end
     end
+
+    ui:frameBegin()
+	if ui:windowBegin('Simulation Details', 0 , 0, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
+
+		ui:layoutRow('dynamic', 12, 2)
+        ui:label('FPS:')
+        ui:label(string.format('%.2f', love.timer.getFPS()))
+		ui:layoutRow('dynamic', 12, 2)
+		ui:label('Number of planets:')
+		ui:label(string.format('%.0f', #system.planets))
+		ui:layoutRow('dynamic', 12, 2)
+		ui:label('Time passed (days):')
+		ui:label(string.format('%.2f', system.totalTime))
+		ui:layoutRow('dynamic', 12, 2)
+        ui:label('Simulation timestep:')
+        ui:label(string.format('%.2f', system.delta))
+		ui:layoutRow('dynamic', 12, 2)
+        ui:label('Current Planet:')
+        ui:label(string.format('%.0f', currentPlanet))
+		ui:layoutRow('dynamic', 12, 2)
+        ui:label('ShowTrail:')
+        ui:label(string.format('%s', showTrail))
+
+    end
+
+    --Only rotate the view when not dragging the window
+    if love.mouse.isDown(1) and not ui:windowIsHovered() then
+        local newAngleY =  (mousePositionX - oldMousePositionX) * 1/100
+        local newAngleX = (mousePositionY - oldMousePositionY) * 1/100
+
+        camera.rotX = camera.rotX + newAngleX
+        camera.rotY = camera.rotY + newAngleY
+    end
+    
+	ui:windowEnd()
+	ui:frameEnd()
 end
 
-
 function simulation:draw()
+    ui:draw()
     love.graphics.setColor(1,1,1 )
     love.graphics.print(string.format("%s", tostring(system.integrator)), love.graphics.getWidth() / 2, 0)
-    love.graphics.print(string.format("%.0f bodies", #system.planets), 0,0)
-    love.graphics.print(string.format("%f days", system.totalTime), 0, 24)
     love.graphics.print(string.format("Camera zoom: %.3f,%.3f", camera.scaleX, camera.scaleY), 0, 36)
     love.graphics.print(string.format("Camera x and y: %.3f, %.3f", camera.posX, camera.posY), 0, 48)
     love.graphics.print(string.format("Camera rotation: %.3f, %.3f, %.3f", camera.rotX, camera.rotY, camera.rotZ), 0, 60)
-    love.graphics.print(string.format("Current Planet: %.0f", currentPlanet), 0, 72)
-    love.graphics.print(string.format("delta: %.8f", system.delta), 0, 84)
-    love.graphics.print(string.format("Fps: %.2f", love.timer.getFPS()), 0, 96)
-    love.graphics.print(string.format("ShowTrail: %s", showTrail), 0, 108)
+    
+    for i,planet in ipairs(system.planets) do
+        love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z), 0, 132 + i * 12)
+    end
 
     if render then
-        for i,planet in ipairs(system.planets) do
-            love.graphics.print(string.format("Planet%.0f position: %.3f,%.3f,%.3f", i - 1, planet.positionVec.x, planet.positionVec.y, planet.positionVec.z), 0, 132 + i * 12)
-        end
 
         camera:set()
         system:draw(showTrail, camera)
@@ -185,4 +211,39 @@ function simulation:wheelmoved(z,y)
     end
 end
 
-return simulation 
+function simulation:keyreleased(key, code)
+    if key == "return" then
+        local Simulation = require("states.simulation")
+        Gamestate.switch(Simulation)
+    end
+
+    if ui:keyreleased(key, code) then
+		return -- event consumed
+	end
+end
+
+function simulation:mousepressed(x, y, button, istouch, presses)
+	if ui:mousepressed(x, y, button, istouch, presses) then
+		return -- event consumed
+	end
+end
+
+function simulation:mousereleased(x, y, button, istouch, presses)
+	if ui:mousereleased(x, y, button, istouch, presses) then
+		return -- event consumed
+	end
+end
+
+function simulation:mousemoved(x, y, dx, dy, istouch)
+	if ui:mousemoved(x, y, dx, dy, istouch) then
+		return -- event consumed
+	end
+end
+
+function simulation:textinput(text)
+	if ui:textinput(text) then
+		return -- event consumed
+	end
+end
+
+return simulation

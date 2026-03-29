@@ -54,8 +54,8 @@ end
 --To zoom, sx must be bigger than 1
 function Camera:scale(sx, sy)
     sx = sx or 1
-    self.scaleX = self.scaleX * 1 / sx
-    self.scaleY = self.scaleY * 1 / (sy or sx)
+    self.scaleX = self.scaleX / sx
+    self.scaleY = self.scaleY / (sy or sx)
 end
 
 function Camera:setScale(sx, sy)
