@@ -1,4 +1,13 @@
-Simple n body simulation, will add onto this later
+![Logo.png](/Logo.png)
 
-Here's a cool banner i made for now:
-![banner](/assets//NBodyBanner1.png)
+##  About
+N-body simulator that currently support euler and verlet integration.
+
+## Controls
+- w,a,s,d: move the camera
+- scroll up/down: zoom in/out
+- space: pause/resume the simulation
+- r: toggle planet rendering
+- t: toggle planet trail
+
+![banner](/)
