@@ -93,10 +93,4 @@ function menu:textinput(text)
 	end
 end
 
--- function menu.wheelmoved(x, y)
--- 	if ui:wheelmoved(x, y) then
--- 		return -- event consumed
--- 	end
--- end
-
 return menu

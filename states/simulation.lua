@@ -22,7 +22,6 @@ local tempY = love.mouse.getY()
 -- local outputValues
 
 local realTime = false
-local debug = false
 local showTrail = true
 local solarSystem = true
 local centerOnPlanet = false
@@ -30,6 +29,8 @@ local canSpawn = false
 -- local plotGraph = true
 -- local fileClosed = false
 local render = true
+local windowIsHovered1 = false
+local windowIsHovered2 = false
 
 --Objects
 ---@type PlanetarySystem
@@ -136,11 +137,13 @@ function simulation:update(dt)
 
     --Simulation details
     ui:frameBegin()
-	if ui:windowBegin('Simulation Details', 5 , 5, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
-
+	if ui:windowBegin('Simulation Details', 5 , 5, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar', 'minimizable') then
 		ui:layoutRow('dynamic', 12, 2)
         ui:label('FPS:')
         ui:label(string.format('%.2f', love.timer.getFPS()))
+		ui:layoutRow('dynamic', 12, 2)
+        ui:label('Active Integrator:')
+        ui:label(string.format('%s', system.integrator))
 		ui:layoutRow('dynamic', 12, 2)
 		ui:label('Number of planets:')
 		ui:label(string.format('%.0f', #system.planets))
@@ -158,20 +161,12 @@ function simulation:update(dt)
         ui:label(string.format('%s', showTrail))
     end
 
-    --Only rotate the view when not dragging the window
-    if love.mouse.isDown(1) and not ui:windowIsHovered() then
-        local newAngleY =  (mousePositionX - oldMousePositionX) * 1/100
-        local newAngleX = (mousePositionY - oldMousePositionY) * 1/100
-
-        camera.rotX = camera.rotX + newAngleX
-        camera.rotY = camera.rotY + newAngleY
-    end
-    
+    windowIsHovered1 = ui:windowIsHovered()
 	ui:windowEnd()
 	ui:frameEnd()
 
     planetPositionUi:frameBegin()
-	if planetPositionUi:windowBegin('Planet Positions', 5 , 170, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar') then
+	if planetPositionUi:windowBegin('Planet Positions', 5 , 170, 300, 160, 'border', 'title', 'movable', 'scalable', 'scrollbar', 'minimizable') then
         for i = 1, #system.planets do
             local planet = system.planets[i]
             planetPositionUi:layoutRow('dynamic', 12, 2)
@@ -179,15 +174,22 @@ function simulation:update(dt)
             planetPositionUi:label(string.format('%0.3f, %0.3f, %0.3f', planet.positionVec.x, planet.positionVec.y, planet.positionVec.y))
         end
     end
+
+    windowIsHovered2 = planetPositionUi:windowIsHovered()
     planetPositionUi:windowEnd()
     planetPositionUi:frameEnd()
+
+    --Only rotate the view when not dragging the window
+    if love.mouse.isDown(1) and not windowIsHovered1 and not windowIsHovered2  then
+        local newAngleY =  (mousePositionX - oldMousePositionX) * 1/100
+        local newAngleX = (mousePositionY - oldMousePositionY) * 1/100
+
+        camera.rotX = camera.rotX + newAngleX
+        camera.rotY = camera.rotY + newAngleY
+    end
 end
 
 function simulation:draw()
-    --Print the active integrator
-    love.graphics.setColor(1,1,1 )
-    love.graphics.print(string.format("%s", tostring(system.integrator)), love.graphics.getWidth() / 2, 0)
-
     if render then
         camera:set()
         system:draw(showTrail, camera)
@@ -205,15 +207,10 @@ end
 
 function simulation:keypressed(key, scancode, isrepeat)
     if key == "c" then system:clearAllPlanets() end
-    if key == "n" then
-        currentPlanet = (currentPlanet + 1) % #system.planets
-    end
-
+    if key == "n" then currentPlanet = (currentPlanet + 1) % #system.planets end
     if key == "space" then system.runSimulation = not system.runSimulation end
-    if key == "1" then debug = not debug end
     if key == "t" then showTrail = not showTrail end
     if key == "x" then centerOnPlanet = not centerOnPlanet end
-    -- if key == "i" then     end
     if key == "l" then canSpawn = not canSpawn end
     if key == "r" then render = not render end
 
@@ -229,11 +226,6 @@ function simulation:wheelmoved(z,y)
 end
 
 function simulation:keyreleased(key, code)
-    if key == "return" then
-        local Simulation = require("states.simulation")
-        Gamestate.switch(Simulation)
-    end
-
     input('keyreleased', key, code)
 end
 

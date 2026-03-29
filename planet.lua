@@ -34,13 +34,6 @@ function Planet:new(name, color, radius, mass, density, positionVec, velocityVec
     newPlanet.density = density or 5.513 --kg per cubic meter
     newPlanet.radius = radius or ((3 * (newPlanet.mass / newPlanet.density) / 4 * math.pi) ^ 1/3) --meters
     newPlanet.positionVec = positionVec
-
-    --Deep copy of the positionVec
-    -- newPlanet.oldPositionVec = {x = 0, y = 0, z = 0}
-    -- newPlanet.oldPositionVec.x = newPlanet.positionVec.x --Needed when using verlet integration
-    -- newPlanet.oldPositionVec.y = newPlanet.positionVec.y --Needed when using verlet integration
-    -- newPlanet.oldPositionVec.z = newPlanet.positionVec.z --Needed when using verlet integration
-
     newPlanet.oldPositionVec = Vector3D:new(positionVec.x, positionVec.y, positionVec.z)
     newPlanet.velocityVec = velocityVec
     newPlanet.accelerationVec = Vector3D:new(0, 0, 0)

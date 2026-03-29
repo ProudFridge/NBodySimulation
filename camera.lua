@@ -1,4 +1,11 @@
 ---@class Camera
+---@field posX number
+---@field posY number
+---@field scaleX number
+---@field scaleY number
+---@field rotX  number
+---@field rotY number
+---@field rotZ number
 local Camera = {}
 Camera.__index = Camera
 
