@@ -1,6 +1,35 @@
 local Gamestate = require("gamestate")
 local nuklear = require("nuklear")
 
+local fetch = require("fetch")
+local opts = {}
+local response
+
+local solarSystemCodes = {10,199,299,401,402,499}
+local file, err = io.open("planetDatas.txt", "w")
+local link = [[https://ssd.jpl.nasa.gov/api/horizons.api?format=text
+&COMMAND='MB'
+&OBJ_DATA='NO'
+&MAKE_EPHEM='YES'
+&EPHEM_TYPE='VECTOR'
+&VEC_TABLE='2'
+&CENTER='500@399'
+&START_TIME='2026-01-01 00:00'
+&STOP_TIME='2026-01-01 00:01'
+&STEP_SIZE='1%20d'
+&CSV_FORMAT='YES']]
+
+fetch(link, opts, function(res)
+    print(res.code) -- status number
+    print(res.headers) -- table key/value
+    print(res.body) -- raw string with the respose
+    response = res.body
+    file:write(response)
+    print(res.adapter) -- how the request was made
+    file:close()
+end)
+
+
 local ui
 local menu = {}
 local centerX, centerY = love.graphics.getWidth() / 2, love.graphics.getHeight() / 2
@@ -18,13 +47,14 @@ function menu:init()
 end
 
 function menu:update(dt)
+    fetch.update()
+
 	ui:frameBegin()
 	if ui:windowBegin('Simulation Setup', centerX - uiWidth / 2, centerY - uiHeight / 2, uiWidth, uiHeight, 'border', 'title', 'movable', 'scalable', 'scrollbar', 'minimizable') then
 
 		ui:layoutRow('dynamic', 30, 2)
-        if ui:widgetIsHovered() then
-            
-        end
+ 
+        --TODo -> add info box when hovering over each item
 		ui:label('Simulation timestep')
         ui:edit('simple', delta)
 
