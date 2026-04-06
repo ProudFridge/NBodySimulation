@@ -1,5 +1,4 @@
 local Gamestate = require("libs.gamestate")
-local NasaHorizons = require("libs.nasaHorizons")
 local nuklear = require("nuklear")
 
 local ui
@@ -8,7 +7,7 @@ local menu = {}
 local centerX, centerY = love.graphics.getWidth() / 2, love.graphics.getHeight() / 2
 local integratorIdx = 1
 local integrators = {"Euler", "Verlet"}
-local uiWidth, uiHeight = 340, 260
+local uiWidth, uiHeight = 360, 260
 local logo = love.graphics.newImage("Logo.png")
 
 local editValues = {
@@ -17,55 +16,29 @@ local editValues = {
     searchedObject = {value=""}
 }
 
---State variables
-local active = false
-
-local defaultPlanets = {
-    {name="SUN" , value = true},
-    {name="MERCURY" , value = true},
-    {name="VENUS" , value = true},
-    {name="EARTH" , value = true},
-    {name="MOON" , value = true},
-    {name="MARS" , value = true},
-    {name="JUPITER" , value = true},
-    {name="SATURN" , value = true},
-    {name="URANUS" , value = true},
-    {name="NEPTUNE" , value = true}
-}
-
-local function toTitleCase(str)
-    -- capitalize first letter of each word
-    return str:gsub("(%a)([%w_']*)", function(first, rest)
-        return first:upper() .. rest:lower()
-    end)
-end
-
 function menu:init()
     love.keyboard.setKeyRepeat(true)
     ui = nuklear.newUI()
-    NasaHorizons.request("Earth", "2026-01-01")
     love.graphics.setBackgroundColor(100/255, 100/255, 104/255, 0)
 end
 
 function menu:update(dt)
-    NasaHorizons.update()
-
 	ui:frameBegin()
 	if ui:windowBegin('Simulation Setup', centerX - uiWidth / 2, centerY - uiHeight / 2, uiWidth, uiHeight, 'border', 'title', 'movable', 'scalable', 'scrollbar', 'minimizable') then
 
 		ui:layoutRow('dynamic', 30, 2)
  
         if ui:widgetIsHovered() then
-            ui:tooltip("The timestep to use when advancing the planets each frame")
+            ui:tooltip("The timestep to use when advancing the planets each frame, in days")
         end
-		ui:label('Simulation timestep')
+		ui:label('Simulation timestep (days)')
         ui:edit('simple', editValues.delta)
 
         ui:layoutRow('dynamic', 30, 2)
         if ui:widgetIsHovered() then
-            ui:tooltip("The simulation time")
+            ui:tooltip("The simulation time, in days")
         end
-		ui:label('Simulation time')
+		ui:label('Simulation time (days)')
         ui:edit('simple', editValues.iterationTime)
 
         ui:layoutRow('dynamic', 30, 2)
@@ -75,44 +48,11 @@ function menu:update(dt)
         ui:label("Integrator:")
         integratorIdx = ui:combobox(integratorIdx, integrators)
 
-        
-        --Choosing which planets to include in the simulation
-        local open = ui:treePush('node', "Planets (All are included by default)")
-        if open then
-            for _, state in ipairs(defaultPlanets) do
-                ui:layoutRow('dynamic', 30 ,2)
-                ui:label(state.name)
-                
-                state.value = ui:checkbox("Include", state.value)
-            end
-            ui:treePop()
-        end
-        
-        --Importing data from NasaHorizons
-        ui:layoutRow('dynamic', 30, 1)
-        if ui:widgetIsHovered() then
-            ui:tooltip("Lets you import the chosen planets' position at any given date from the nasa horizons system")
-        end
-
-        active = ui:checkbox('Import from nasa horizons', active)
-        if active then
-            ui:edit('simple', editValues.searchedObject)
-            if ui:button('Add object') then
-                print(NasaHorizons.request(toTitleCase(editValues.searchedObject.value), "2026-01-01"))
-            end
-        end
-        
         --Starting the simulation
-        ui:layoutRow('dynamic', 30, {0.25, 0.75})
+        ui:layoutRow('dynamic', 30, 1)
         if ui:button('Start') then
             passedElements.params = {integrator = integrators[integratorIdx], delta = tonumber(editValues.delta.value), iterationTime = tonumber(editValues.iterationTime.value)}
-            passedElements.planets = {}
 
-            for i = 1, #defaultPlanets do
-                if defaultPlanets[i].value then
-                    table.insert(passedElements.planets, defaultPlanets[i].name)
-                end
-            end
             Gamestate.switch(require("states.simulation"), passedElements)
         end
     end
