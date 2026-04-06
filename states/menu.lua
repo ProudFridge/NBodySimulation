@@ -1,53 +1,54 @@
 local Gamestate = require("gamestate")
+local NasaHorizons = require("libs.nasaHorizons")
 local nuklear = require("nuklear")
 
-local fetch = require("fetch")
-local opts = {}
-local response
-
-local solarSystemCodes = {10,199,299,401,402,499}
-local file, err = io.open("planetDatas.txt", "w")
-local link = [[https://ssd.jpl.nasa.gov/api/horizons.api?format=text
-&COMMAND='MB'
-&OBJ_DATA='NO'
-&MAKE_EPHEM='YES'
-&EPHEM_TYPE='VECTOR'
-&VEC_TABLE='2'
-&CENTER='500@399'
-&START_TIME='2026-01-01 00:00'
-&STOP_TIME='2026-01-01 00:01'
-&STEP_SIZE='1%20d'
-&CSV_FORMAT='YES']]
-
-fetch(link, opts, function(res)
-    print(res.code) -- status number
-    print(res.headers) -- table key/value
-    print(res.body) -- raw string with the respose
-    response = res.body
-    file:write(response)
-    print(res.adapter) -- how the request was made
-    file:close()
-end)
-
-
 local ui
+local passedElements = {}
 local menu = {}
 local centerX, centerY = love.graphics.getWidth() / 2, love.graphics.getHeight() / 2
 local integratorIdx = 1
 local integrators = {"Euler", "Verlet"}
-local delta = {value = ""}
-local iterationTime = {value = ""}
 local uiWidth, uiHeight = 340, 260
 local logo = love.graphics.newImage("Logo.png")
+
+local editValues = {
+    delta = {value=""},
+    iterationTime = {value=""},
+    searchedObject = {value=""}
+}
+
+--State variables
+local active = false
+
+local defaultPlanets = {
+    {name="SUN" , value = true},
+    {name="MERCURY" , value = true},
+    {name="VENUS" , value = true},
+    {name="EARTH" , value = true},
+    {name="MOON" , value = true},
+    {name="MARS" , value = true},
+    {name="JUPITER" , value = true},
+    {name="SATURN" , value = true},
+    {name="URANUS" , value = true},
+    {name="NEPTUNE" , value = true}
+}
+
+local function toTitleCase(str)
+    -- capitalize first letter of each word
+    return str:gsub("(%a)([%w_']*)", function(first, rest)
+        return first:upper() .. rest:lower()
+    end)
+end
 
 function menu:init()
     love.keyboard.setKeyRepeat(true)
     ui = nuklear.newUI()
+    NasaHorizons.request("Earth", "2026-01-01")
     love.graphics.setBackgroundColor(100/255, 100/255, 104/255, 0)
 end
 
 function menu:update(dt)
-    fetch.update()
+    NasaHorizons.update()
 
 	ui:frameBegin()
 	if ui:windowBegin('Simulation Setup', centerX - uiWidth / 2, centerY - uiHeight / 2, uiWidth, uiHeight, 'border', 'title', 'movable', 'scalable', 'scrollbar', 'minimizable') then
@@ -55,21 +56,65 @@ function menu:update(dt)
 		ui:layoutRow('dynamic', 30, 2)
  
         --TODo -> add info box when hovering over each item
+        if ui:widgetIsHovered() then
+            ui:tooltip("The timestep to use when advancing the planets each frame")
+        end
 		ui:label('Simulation timestep')
-        ui:edit('simple', delta)
+        ui:edit('simple', editValues.delta)
 
         ui:layoutRow('dynamic', 30, 2)
+        if ui:widgetIsHovered() then
+            ui:tooltip("The simulation time")
+        end
 		ui:label('Simulation time')
-        ui:edit('simple', iterationTime)
+        ui:edit('simple', editValues.iterationTime)
 
         ui:layoutRow('dynamic', 30, 2)
+        if ui:widgetIsHovered() then
+            ui:tooltip("The integrator the simulation will use Different integrators have different advantages/disadvantages")
+        end
         ui:label("Integrator:")
         integratorIdx = ui:combobox(integratorIdx, integrators)
 
+        
+        --Choosing which planets to include in the simulation
+        local open = ui:treePush('node', "Planets (All are included by default)")
+        if open then
+            for _, state in ipairs(defaultPlanets) do
+                ui:layoutRow('dynamic', 30 ,2)
+                ui:label(state.name)
+                
+                state.value = ui:checkbox("Include", state.value)
+            end
+            ui:treePop()
+        end
+        
+        --Importing data from NasaHorizons
         ui:layoutRow('dynamic', 30, 1)
+        if ui:widgetIsHovered() then
+            ui:tooltip("Lets you import the chosen planets' position at any given date from the nasa horizons system")
+        end
+
+        active = ui:checkbox('Import from nasa horizons', active)
+        if active then
+            ui:edit('simple', editValues.searchedObject)
+            if ui:button('Add object') then
+                print(NasaHorizons.request(toTitleCase(editValues.searchedObject.value), "2026-01-01"))
+            end
+        end
+        
+        --Starting the simulation
+        ui:layoutRow('dynamic', 30, {0.25, 0.75})
         if ui:button('Start') then
             print('Starting simulation!')
-            Gamestate.switch(require("states.simulation"), {integrator = integrators[integratorIdx], delta = tonumber(delta.value), iterationTime = tonumber(iterationTime.value) })
+            passedElements.params = {integrator = integrators[integratorIdx], delta = tonumber(editValues.delta.value), iterationTime = tonumber(editValues.iterationTime.value)}
+            passedElements.planets = {}
+            for i = 1, #defaultPlanets do
+                if defaultPlanets[i].value then
+                    table.insert(passedElements.planets, defaultPlanets[i].name)
+                end
+            end
+            Gamestate.switch(require("states.simulation") )
         end
     end
 	ui:windowEnd()
@@ -82,11 +127,6 @@ function menu:draw()
 end
 
 function menu:keyreleased(key, code)
-    if key == "return" then
-        local Simulation = require("states.simulation")
-        Gamestate.switch(Simulation)
-    end
-
     if ui:keyreleased(key, code) then
 		return -- event consumed
 	end
@@ -121,6 +161,10 @@ function menu:textinput(text)
 	if ui:textinput(text) then
 		return -- event consumed
 	end
+end
+
+function menu:wheelmoved(x,y)
+	ui:wheelmoved(x, y)
 end
 
 return menu

@@ -42,9 +42,10 @@ function simulation:enter(prev, config)
     ui = nuklear.newUI()
     planetPositionUi = nuklear.newUI()
     -- if plotGraph then outputValues = io.open("values.csv", "w") end
-    system:selectActiveIntegrator(config.integrator)
-    system.delta = config.delta or 0.1
+    system:selectActiveIntegrator(config.params.integrator)
+    system.delta = config.params.delta or 0.1
     system.iterationTime = config.iterationTime or math.huge
+
     camera:setScale(1, 1)
     camera:scale(100)
 
