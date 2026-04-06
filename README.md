@@ -2,7 +2,7 @@
 
 ##  About
 N-body simulator that currently support euler and verlet integration.
-
+![Demo](assets/demo.gif)
 ## Installation
 1. Download and unzip NBodySimulation.zip in the release page
 1. Run NBodySimulation.exe 👍
