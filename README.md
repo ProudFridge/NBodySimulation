@@ -3,6 +3,10 @@
 ##  About
 N-body simulator that currently support euler and verlet integration.
 
+## Installation
+Download an unzip NBodySimulation.zip in the release page
+Run NBodySimulation.exe
+
 ## Controls
 - **w,a,s,d**: move the camera
 - **scroll up/down**: zoom in/out
