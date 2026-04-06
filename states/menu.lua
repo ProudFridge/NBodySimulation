@@ -1,4 +1,4 @@
-local Gamestate = require("gamestate")
+local Gamestate = require("libs.gamestate")
 local NasaHorizons = require("libs.nasaHorizons")
 local nuklear = require("nuklear")
 
@@ -55,7 +55,6 @@ function menu:update(dt)
 
 		ui:layoutRow('dynamic', 30, 2)
  
-        --TODo -> add info box when hovering over each item
         if ui:widgetIsHovered() then
             ui:tooltip("The timestep to use when advancing the planets each frame")
         end
@@ -106,15 +105,15 @@ function menu:update(dt)
         --Starting the simulation
         ui:layoutRow('dynamic', 30, {0.25, 0.75})
         if ui:button('Start') then
-            print('Starting simulation!')
             passedElements.params = {integrator = integrators[integratorIdx], delta = tonumber(editValues.delta.value), iterationTime = tonumber(editValues.iterationTime.value)}
             passedElements.planets = {}
+
             for i = 1, #defaultPlanets do
                 if defaultPlanets[i].value then
                     table.insert(passedElements.planets, defaultPlanets[i].name)
                 end
             end
-            Gamestate.switch(require("states.simulation") )
+            Gamestate.switch(require("states.simulation"), passedElements)
         end
     end
 	ui:windowEnd()

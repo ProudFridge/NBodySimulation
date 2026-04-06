@@ -1,4 +1,4 @@
-local Gamestate = require("gamestate")
+local Gamestate = require("libs.gamestate")
 local PlanetarySystem = require("planetarySystem")
 local Camera = require("camera")
 local Vector3D = require("vector3d")
@@ -44,7 +44,7 @@ function simulation:enter(prev, config)
     -- if plotGraph then outputValues = io.open("values.csv", "w") end
     system:selectActiveIntegrator(config.params.integrator)
     system.delta = config.params.delta or 0.1
-    system.iterationTime = config.iterationTime or math.huge
+    system.iterationTime = config.params.iterationTime or math.huge
 
     camera:setScale(1, 1)
     camera:scale(100)

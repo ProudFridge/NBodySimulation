@@ -1,4 +1,4 @@
-local Gamestate = require("gamestate")
+local Gamestate = require("libs.gamestate")
 -- local nasaHorizons = require("nasaHorizons")
 
 --Gamestates
