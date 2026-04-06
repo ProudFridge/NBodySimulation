@@ -1,4 +1,4 @@
-![Logo.png](/Logo.png)
+![Logo.png](assets/Logo.png)
 
 ##  About
 N-body simulator that currently support euler and verlet integration.
