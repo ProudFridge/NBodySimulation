@@ -9,7 +9,7 @@ local centerX, centerY = love.graphics.getWidth() / 2, love.graphics.getHeight()
 local integratorIdx = 1
 local integrators = {"Euler", "Verlet"}
 local uiWidth, uiHeight = 340, 260
-local logo = love.graphics.newImage("Logo.png")
+local logo = love.graphics.newImage("assets/Logo.png")
 
 local editValues = {
     delta = {value=""},
@@ -58,14 +58,14 @@ function menu:update(dt)
         if ui:widgetIsHovered() then
             ui:tooltip("The timestep to use when advancing the planets each frame")
         end
-		ui:label('Simulation timestep')
+		ui:label('Simulation timestep (days)')
         ui:edit('simple', editValues.delta)
 
         ui:layoutRow('dynamic', 30, 2)
         if ui:widgetIsHovered() then
             ui:tooltip("The simulation time")
         end
-		ui:label('Simulation time')
+		ui:label('Simulation time (days)')
         ui:edit('simple', editValues.iterationTime)
 
         ui:layoutRow('dynamic', 30, 2)
@@ -103,7 +103,7 @@ function menu:update(dt)
         end
         
         --Starting the simulation
-        ui:layoutRow('dynamic', 30, {0.25, 0.75})
+        ui:layoutRow('dynamic', 30, 1)
         if ui:button('Start') then
             passedElements.params = {integrator = integrators[integratorIdx], delta = tonumber(editValues.delta.value), iterationTime = tonumber(editValues.iterationTime.value)}
             passedElements.planets = {}
@@ -133,7 +133,7 @@ end
 
 function menu:keypressed(key, scancode, isrepeat)
 	if ui:keypressed(key, scancode, isrepeat) then
-		return -- event consumed
+		return
 	end
     if key == "escape" then love.event.quit() end
 end
