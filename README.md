@@ -8,10 +8,10 @@ N-body simulator that currently support euler and verlet integration.
 1. Run NBodySimulation.exe 👍
 
 ## Features
-*Multiple Integrators* – Supports Euler and Verlet for (somewhat) flexible simulation accuracy.
-*Custom Time Steps* – Adjustable simulation timestep to balance performance and precision.
-*Real-time Visualization* – Visualize body positions and trajectories in 3D as the simulation runs.
-*Configurable Simulation Time* – Run simulations for arbitrary durations.
+- **Multiple Integrators** – Supports Euler and Verlet for (somewhat) flexible simulation accuracy.
+- **Custom Time Steps** – Adjustable simulation timestep to balance performance and precision.
+- **Real-time Visualization** – Visualize body positions and trajectories in 3D as the simulation runs.
+- **Configurable Simulation Time** – Run simulations for arbitrary durations.
 
 ## Controls
 - **w,a,s,d**: move the camera
